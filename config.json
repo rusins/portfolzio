@@ -1,0 +1,8 @@
+{
+  "port": 8080,
+  "dataDirectory": "/home/raitis/Pictures/Photos/Website",
+  "previewConfig": {
+    "size": 2560,
+    "quality": 0.7
+  }
+}

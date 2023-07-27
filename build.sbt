@@ -10,6 +10,9 @@ lazy val root = project
 
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio" % "2.0.15",
+      "dev.zio" %% "zio-config" % "4.0.0-RC16",
+      "dev.zio" %% "zio-config-typesafe" % "4.0.0-RC16",
+      "dev.zio" %% "zio-config-magnolia" % "4.0.0-RC16",
       "dev.zio" %% "zio-http" % "3.0.0-RC2",
     )
   )

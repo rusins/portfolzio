@@ -4,10 +4,10 @@ import website.html.template
 import zio.stream.ZStream
 
 object Website:
-  def apply(): Http[Any, Throwable, Request, Response] =
+  def apply(config: WebsiteConfig) =
     Http.collect[Request]:
       case Method.GET -> Root =>
-        Response.html(template(html.h1("Wassup! :D")))
+        Response.html(template(html.h1(s"Wassup! :D")))
 
       // TODO: These file retrieving routes fail in an ugly way if the file doesn't exist.
       case Method.GET -> Root / "css" / file =>

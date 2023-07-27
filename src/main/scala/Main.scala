@@ -1,16 +1,32 @@
-import zio._
-import zio.http._
+import zio.*
+import zio.http.*
+import zio.config.*
+import zio.config.typesafe.TypesafeConfigProvider
 
+import java.io.IOException
 object Main extends ZIOAppDefault:
 
-  val httpApps = Website() ++ FileDownloading()
+  val getConfig = for
+    args <- getArgs
+    configFileName <- args.size match
+      case 0 => ZIO.succeed("config.json")
+      case 1 => ZIO.succeed(args.head)
+      case _ => ZIO.fail(new RuntimeException(
+        "Too many arguments passed! Please pass only a single (optional) config file to load."
+      ))
+    rawConfig <- ZIO.readFile(configFileName).mapError(ioErr => new IOException(s"Unable to load config file: ${ ioErr.getMessage }"))
+    config <- TypesafeConfigProvider.fromHoconString(rawConfig).load(websiteConfig)
+  yield config
 
-  val port = 8080
 
-  def run =
-    Console.printLine(s"Starting server at http://localhost:$port") *>
-      Server
+  def run = getConfig.foldZIO(failure => Console.printLineError(failure.getMessage), config =>
+    for
+      _ <- Console.printLine(s"Starting server at http://localhost:${ config.port }")
+      httpApps = Website(config) ++ FileDownloading()
+      _ <- Server
         .serve(httpApps.withDefaultErrorResponse)
         .provide(
-          Server.defaultWithPort(port)
+          Server.defaultWithPort(config.port)
         )
+    yield ()
+  )
