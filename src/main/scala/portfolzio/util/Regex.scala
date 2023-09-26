@@ -1,4 +1,4 @@
-package util
+package portfolzio.util
 
 object Regex {
   // Update README.md if you change this

@@ -1,4 +1,4 @@
-package website.html
+package portfolzio.website.html
 
 import zio.http.html._
 

@@ -1,7 +1,10 @@
 {
   "port": 8080,
-  "dataDirectory": "/home/raitis/Pictures/Photos/Website",
-  "previewConfig": {
+  "data": {
+    "directory": "/home/raitis/Pictures/Photos/Website",
+    "scanInterval": 300
+  },
+  "previews": {
     "size": 2560,
     "quality": 0.7
   }
