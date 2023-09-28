@@ -15,7 +15,8 @@ lazy val root = project
       "dev.zio" %% "zio-process" % "0.7.2",
       "dev.zio" %% "zio-test" % "2.0.18" % Test,
       "dev.zio" %% "zio-test-sbt" % "2.0.18" % Test,
-      "dev.zio" %% "zio-test-magnolia" % "2.0.18" % Test
+      "dev.zio" %% "zio-test-magnolia" % "2.0.18" % Test,
+      "dev.zio" %% "zio-json" % "0.6.2"
     )
   )
 

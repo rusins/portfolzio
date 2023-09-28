@@ -1,12 +1,12 @@
 package portfolzio
 
-import portfolzio.model.Album
+import portfolzio.model.AlbumEntry
 import zio.*
 
 import scala.collection.immutable.HashMap
 
 type Path = String
-case class AppState(albums: HashMap[Path, Album])
+case class AppState(albums: HashMap[Path, AlbumEntry])
 
 object AppState {
   def empty: AppState = AppState(HashMap.empty)
