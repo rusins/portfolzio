@@ -1,6 +1,3 @@
 {
-  Completely
-  wrong
-  json
-  file
+  "field": "Completely wrong json file"
 }
