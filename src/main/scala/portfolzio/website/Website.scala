@@ -1,10 +1,10 @@
 package portfolzio.website
 
+import portfolzio.website.html.template
 import portfolzio.{AppStateManager, WebsiteConfig}
+import zio.*
 import zio.http.*
 import zio.http.html.Html
-import portfolzio.website.html.template
-import zio.*
 import zio.stream.ZStream
 
 import java.io.IOException
@@ -19,7 +19,7 @@ object Website:
         appStateManager.getState.map(state =>
           Response.html(
             template(
-              html.h1(s"Wassup! :D State: " + state.albums.keySet.mkString(" "))
+              html.h1(s"Wassup! :D State: " + state.albumEntries.keySet.mkString(" "))
             )
           )
         )

@@ -12,7 +12,7 @@ import java.io.{File, FileFilter, IOException}
 
 trait DirectoryScanner:
   /** Never-ending, blocking effect that monitors changes in the configured data directory,
-    * and triggers a directory scan if anything changes, generates new preview images,
+    * triggers a directory scan if anything changes,
     * and updates the global app state when done.
     *
     * zio.process should take care of terminating the inotifywait process when the effect is stopped
@@ -33,12 +33,6 @@ object DirectoryScanner:
       appStateManager: AppStateManager,
       scanRunner: DaemonRunner,
   ) extends DirectoryScanner {
-
-    // TODO:
-    // only generate preview images for new files
-    // add temp directory to dirscannerconfig
-    // ask gpt how to scale images
-    // lookup heic image support in web browsers since it's faster
 
     val monitor: IO[CommandError, Unit] = zio.process
       .Command(
@@ -148,15 +142,14 @@ object DirectoryScanner:
     config: DirectoryScannerConfig,
     appStateManager: AppStateManager,
   ): UIO[DirectoryScanner] = {
-    def scan: Task[Unit] = for
-      _ <- ZIO.log("Starting data directory scan")
-      albums <- findAlbumEntries(config.directory)
-      _ <- ZIO.log(
-        "Directory scan finished. Generating previews for new images..."
-      )
-      // _ <- generatePreviews(albums)
-      _ <- ZIO.log("Preview generation finished.")
-    yield ()
+    def scan: Task[Unit] =
+      for
+        _ <- ZIO.log("Starting data directory scan")
+        albumEntries <- findAlbumEntries(config.directory)
+        _ <- ZIO.log("Directory scan finished.")
+        newAppState <- AppState.fromRawEntries(albumEntries)
+        _ <- appStateManager.setState(newAppState)
+      yield ()
 
     DaemonRunner
       .make(scan)
