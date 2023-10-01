@@ -4,12 +4,16 @@ import portfolzio.Main.getArgs
 import portfolzio.website.Website
 import zio.config.typesafe.TypesafeConfigProvider
 import zio.http.Server
-import zio.{Console, Scope, ZIO, ZIOAppArgs, ZIOAppDefault}
+import zio.logging.consoleLogger
+import zio.{Console, Runtime, Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 
 import java.io.IOException
 
 //noinspection TypeAnnotation
 object Main extends ZIOAppDefault:
+
+  override val bootstrap: ZLayer[ZIOAppArgs, Any, Any] =
+    Runtime.removeDefaultLoggers >>> consoleLogger()
 
   private val getConfig = for
     args <- getArgs
@@ -24,19 +28,17 @@ object Main extends ZIOAppDefault:
         )
     rawConfig <- ZIO
       .readFile(configFileName)
-      .mapError(ioErr =>
-        new IOException(s"Unable to load config file: ${ ioErr.getMessage }")
-      )
+      .mapError(ioErr => new IOException(s"Unable to load config file: ${ ioErr.getMessage }"))
     config <- TypesafeConfigProvider
       .fromHoconString(rawConfig)
       .load(websiteConfig)
   yield config
 
   def run = getConfig.foldZIO(
-    failure => Console.printLineError(failure.getMessage),
+    failure => ZIO.logError(failure.getMessage),
     config =>
       for
-        _ <- Console.printLine(
+        _ <- ZIO.log(
           s"Starting server at http://localhost:${ config.port }"
         )
         appStateManager <- AppStateManager.make
@@ -46,7 +48,7 @@ object Main extends ZIOAppDefault:
           .provide(
             Server.defaultWithPort(config.port)
           )
-        //directoryScanner = DirectoryScanner(config.data, appStateManager, )
+        // directoryScanner = DirectoryScanner(config.data, appStateManager, )
         _ <- webServer
-      yield ()
+      yield (),
   )

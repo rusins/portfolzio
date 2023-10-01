@@ -1,8 +1,12 @@
 package portfolzio.util
 
+import scala.util.matching.Regex
+
 object Regex {
   // Update README.md if you change this
-  val ImageRegex = "(?i)\\.(jpg|jpeg)$"
+  val ImageRegex: Regex = "(?i).*\\.(jpg|jpeg)$".r
   // Update README.md if you change this
-  val RawFileRegex = "(?i)\\.(arw|raw)$"
+  val RawFileRegex: Regex = "(?i).*\\.(arw|raw)$".r
+  // Update README.md if you significantly change this
+  val AlbumRegex: Regex = ".*\\.album$".r
 }
