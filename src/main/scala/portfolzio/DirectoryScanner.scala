@@ -1,14 +1,14 @@
 package portfolzio
 
 import portfolzio.model.{AlbumEntry, ImageInfo}
-import portfolzio.util.Regex.{ImageRegex, RawFileRegex}
-import portfolzio.util.{DaemonRunner, Regex}
+import portfolzio.util.Regex.{AlbumRegex, ImageRegex, RawFileRegex}
+import portfolzio.util.{DaemonRunner, Regex, Utf8Checker}
 import zio.*
 import zio.json.*
 import zio.prelude.NonEmptyList
 import zio.process.CommandError
 
-import java.io.{File, FileFilter}
+import java.io.{File, FileFilter, IOException}
 
 trait DirectoryScanner:
   /** Never-ending, blocking effect that monitors changes in the configured data directory,
@@ -34,21 +34,11 @@ object DirectoryScanner:
       scanRunner: DaemonRunner,
   ) extends DirectoryScanner {
 
+    // TODO:
     // only generate preview images for new files
     // add temp directory to dirscannerconfig
     // ask gpt how to scale images
     // lookup heic image support in web browsers since it's faster
-    //
-    /*
-    def run = loop {
-      log that refresh started
-      scan for changes
-        generate previews for new images
-        create new app state, reading info from all files
-      // later can consider updating state instead of creating from scratch
-      set app appState
-      log that we finished refresh
-    }*/
 
     val monitor: IO[CommandError, Unit] = zio.process
       .Command(
@@ -63,65 +53,112 @@ object DirectoryScanner:
   }
 
   /** @param dataDirectory path to the data directory on the filesystem
-    * @param pathPrefix Will always start and end with '/'
+    * @param pathPrefix    Will always start and end with '/'
     * @return all data (album entries) stored in the data directory
     */
-  private def findAllAlbums(
-      dataDirectory: String,
-      pathPrefix: String = "/",
+  def findAlbumEntries(
+    dataDirectory: String,
+    pathPrefix: String = "/",
   ): UIO[List[AlbumEntry]] =
+    def tryToResolveImage(
+      filesInDir: Seq[File]
+    ): Task[Option[AlbumEntry.Image]] =
+      filesInDir.find(_.getName.contains("info.json") && pathPrefix != "/") match
+        case None           => ZIO.succeed(None)
+        case Some(infoFile) =>
+          for
+            info <- ZIO
+              .readFile(infoFile.getPath)
+              .flatMap(
+                _.fromJson[ImageInfo].fold(
+                  decodingError => ZIO.fail(RuntimeException(s"Failed to decode ${ infoFile.getPath } - $decodingError")),
+                  ZIO.succeed(_),
+                )
+              )
+            imageFiles = filesInDir.filter(file => file.getName.matches(ImageRegex.regex) && file.isFile)
+            rawFiles = filesInDir.filter(file => file.getName.matches(RawFileRegex.regex) && file.isFile)
+            image: Option[AlbumEntry.Image] = NonEmptyList
+              .fromIterableOption(imageFiles)
+              .map(imageFiles =>
+                AlbumEntry.Image(
+                  AlbumEntry.Id.unsafe(pathPrefix.dropRight(1)), // Remove trailing `/`
+                  info,
+                  imageFiles = imageFiles.map(pathPrefix + _.getName),
+                  rawFiles = rawFiles.map(pathPrefix + _.getName).toList,
+                )
+              )
+          yield image
+
+    def parseAlbum(pathPrefix: String, file: File): UIO[Option[AlbumEntry.Album]] =
+      Utf8Checker
+        .checkFile(file.getPath)
+        .flatMap {
+          case false => ZIO.logWarning(s"Album file ${ file.getPath } is not UTF-8 encoded!").as(None)
+          case true  =>
+            ZIO
+              .readFile(file.getPath)
+              .flatMap(fileContents =>
+                ZIO.succeed(
+                  Some[AlbumEntry.Album](
+                    AlbumEntry
+                      .Album(
+                        AlbumEntry.Id.safe(pathPrefix + file.getName.stripSuffix(".album")),
+                        children = fileContents.split('\n').toVector,
+                      )
+                  )
+                ),
+              )
+        }
+        .catchAll((e: IOException) => ZIO.logError(s"Failed to open file ${ file.getPath } - ${ e.getMessage }").as(None))
+
+    def resolveAlbums(filesInDir: Seq[File]): UIO[List[AlbumEntry]] =
+      ZIO
+        .collectAll(
+          filesInDir
+            .filter(file => file.isFile && file.getName.matches(AlbumRegex.regex))
+            .map(file => parseAlbum(pathPrefix, file))
+            .toList
+        )
+        .map(_.flatten)
+
+    def searchInSubDirs(filesInDir: Seq[File]): UIO[List[AlbumEntry]] =
+      ZIO
+        .collectAll(
+          filesInDir
+            .filter(_.isDirectory)
+            .map(dir => findAlbumEntries(dataDirectory, pathPrefix + dir.getName + "/"))
+            .toList
+        )
+        .map(_.flatten)
+
     val dir = new File(dataDirectory + pathPrefix)
-    val files = dir.listFiles().map(f => f.getName -> f).toMap
-    val currentImage =
-      if (pathPrefix != "/" && files.contains("info.json"))
-        val infoFilePath = dataDirectory + pathPrefix + "info.json"
-        for
-          info <- ZIO
-            .readFile(infoFilePath)
-            .flatMap(
-              _.fromJson[ImageInfo].fold(
-                decodingError =>
-                  ZIO.fail(s"Failed to decode $infoFilePath - $decodingError"),
-                ZIO.succeed(_),
-              )
-            )
-          imageFiles = files.filter((name, file) =>
-            name.matches(ImageRegex) && file.isFile
-          )
-          rawFiles = files
-            .filter((name, file) => name.matches(RawFileRegex) && file.isFile)
-          image = NonEmptyList
-            .fromIterableOption(imageFiles.keys)
-            .map(imageFiles =>
-              AlbumEntry.Image(
-                id = pathPrefix,
-                info,
-                imageFiles = imageFiles.map(pathPrefix + _),
-                rawFiles = rawFiles.keys.map(pathPrefix + _).toList,
-              )
-            )
-        yield image
-      else ZIO.succeed(None)
-      // val albums = files.values.filter(_.)
-    ZIO.succeed(List.empty[AlbumEntry])
+    (for
+      filesInDir <- ZIO.attempt(dir.listFiles())
+      subDirEntries <- searchInSubDirs(filesInDir)
+      localImage <- tryToResolveImage(filesInDir)
+      localAlbums <- resolveAlbums(filesInDir)
+    yield localImage.toList ++ localAlbums ++ subDirEntries).catchAll(t =>
+      ZIO
+        .logWarning(s"WARN: Failed to scan directory ${ dir.getPath } - ${ t.getMessage }")
+        .map(_ => List.empty[AlbumEntry])
+    )
+  end findAlbumEntries
 
   def make(
-      config: DirectoryScannerConfig,
-      appStateManager: AppStateManager,
-  ): IO[Nothing, DirectoryScanner] = {
+    config: DirectoryScannerConfig,
+    appStateManager: AppStateManager,
+  ): UIO[DirectoryScanner] = {
     def scan: Task[Unit] = for
-      _ <- Console.printLine("Starting data directory scan")
-      albums <- findAllAlbums(config.directory)
-      _ <- Console.printLine(
+      _ <- ZIO.log("Starting data directory scan")
+      albums <- findAlbumEntries(config.directory)
+      _ <- ZIO.log(
         "Directory scan finished. Generating previews for new images..."
       )
       // _ <- generatePreviews(albums)
-      _ <- Console.printLine("Preview generation finished.")
+      _ <- ZIO.log("Preview generation finished.")
     yield ()
 
     DaemonRunner
       .make(scan)
-      .map(scanRunner =>
-        DirectoryScannerImpl(config, appStateManager, scanRunner)
-      )
+      .map(scanRunner => DirectoryScannerImpl(config, appStateManager, scanRunner))
   }
