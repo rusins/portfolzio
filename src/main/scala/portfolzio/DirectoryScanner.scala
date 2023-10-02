@@ -3,12 +3,13 @@ package portfolzio
 import portfolzio.model.{AlbumEntry, ImageInfo}
 import portfolzio.util.Regex.{AlbumRegex, ImageRegex, RawFileRegex}
 import portfolzio.util.{DaemonRunner, Regex, Utf8Checker}
-import zio.*
 import zio.json.*
 import zio.prelude.NonEmptyList
 import zio.process.CommandError
+import zio.{process, *}
 
 import java.io.{File, FileFilter, IOException}
+import java.nio.file.{Path, Paths}
 
 trait DirectoryScanner:
   /** Never-ending, blocking effect that monitors changes in the configured data directory,
@@ -28,21 +29,37 @@ object DirectoryScanner:
       case _                                => true
     }
 
+  def monitoringProcess(directory: Path, onChange: UIO[Unit]): IO[process.CommandError, Unit] =
+    ZIO.scoped {
+      for
+        process <- ZIO.acquireRelease(
+          zio.process.Command(
+            "inotifywait",
+            "--recursive", // sets up watches in subdirectories
+            "--monitor", // watch for changes indefinitely
+            "-e",
+            "create", // watch for new file creation
+            "-e",
+            "modify", // watch for file modification
+            "-e",
+            "delete", // watch for file deletion
+            s"${ directory.toString }",
+          ).run
+        )(process => ZIO.log("Killed directory monitoring process") *> process.kill.ignoreLogged)
+        // The process is uninterruptable, so in order to kill it through an interruption, we must fork it to another
+        // fiber, and have this effect loop forever so that the resource doesn't get closed.
+        _ <- process.stdout.linesStream.tap(line => ZIO.logDebug(line) *> onChange).retry(inotifySchedule).runDrain.fork
+        _ <- ZIO.never
+      yield ()
+    }
+
   private class DirectoryScannerImpl(
-      config: DirectoryScannerConfig,
-      appStateManager: AppStateManager,
-      scanRunner: DaemonRunner,
+    config: DirectoryScannerConfig,
+    appStateManager: AppStateManager,
+    scanRunner: DaemonRunner,
   ) extends DirectoryScanner {
 
-    val monitor: IO[CommandError, Unit] = zio.process
-      .Command(
-        "inotifywait",
-        s"-r -m -e create -e modify -e delete ${config.directory}",
-      )
-      .linesStream
-      .retry(inotifySchedule)
-      .tap(_ => scanRunner.run)
-      .runDrain
+    val monitor: UIO[Unit] = monitoringProcess(Paths.get(config.directory), scanRunner.run).fork.as(())
 
   }
 
