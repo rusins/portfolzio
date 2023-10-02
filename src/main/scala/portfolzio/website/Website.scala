@@ -1,6 +1,6 @@
 package portfolzio.website
 
-import portfolzio.website.html.template
+import portfolzio.website.html.{headerTemplate, navigationTemplate}
 import portfolzio.{AppStateManager, WebsiteConfig}
 import zio.*
 import zio.http.*
@@ -17,7 +17,7 @@ object Website:
       case Method.GET -> Root =>
         appStateManager.getState.map(state =>
           Response.html(
-            template(
+            navigationTemplate(
               html.h1(s"Wassup! :D State: " + state.albumEntries.keySet.mkString(" "))
             )
           )
@@ -31,9 +31,9 @@ object Website:
             Response(
               headers = Headers(
                 Header.ContentType(MediaType.text.css),
-                Header.ContentDisposition.attachment(file)
+                Header.ContentDisposition.attachment(file),
               ),
-              body = Body.fromChunk(chunk)
+              body = Body.fromChunk(chunk),
             )
           )
 
@@ -45,8 +45,8 @@ object Website:
             Response(
               headers = Headers(
                 Header.ContentType(MediaType.text.javascript),
-                Header.ContentDisposition.attachment(file)
+                Header.ContentDisposition.attachment(file),
               ),
-              body = Body.fromChunk(chunk)
+              body = Body.fromChunk(chunk),
             )
           )
