@@ -2,7 +2,7 @@
   "port": 8080,
   "data": {
     "directory": "/home/raitis/Pictures/Photos/Website",
-    "scanInterval": 300
+    "minScanInterval": 6
   },
   "previews": {
     "size": 2560,

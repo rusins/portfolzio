@@ -20,6 +20,9 @@ trait DirectoryScanner:
     */
   val monitor: IO[CommandError, Unit]
 
+  /** Trigger a scan manually */
+  val run: UIO[Unit]
+
 object DirectoryScanner:
 
   private val inotifySchedule =
@@ -46,7 +49,7 @@ object DirectoryScanner:
             s"${ directory.toString }",
           ).run
         )(process => ZIO.log("Killed directory monitoring process") *> process.kill.ignoreLogged)
-        // The process is uninterruptable, so in order to kill it through an interruption, we must fork it to another
+        // The process is uninterruptible, so in order to kill it through an interruption, we must fork it to another
         // fiber, and have this effect loop forever so that the resource doesn't get closed.
         _ <- process.stdout.linesStream.tap(line => ZIO.logDebug(line) *> onChange).retry(inotifySchedule).runDrain.fork
         _ <- ZIO.never
@@ -60,6 +63,8 @@ object DirectoryScanner:
   ) extends DirectoryScanner {
 
     val monitor: UIO[Unit] = monitoringProcess(Paths.get(config.directory), scanRunner.run).fork.as(())
+
+    val run: UIO[Unit] = scanRunner.run
 
   }
 
@@ -92,10 +97,10 @@ object DirectoryScanner:
               .fromIterableOption(imageFiles)
               .map(imageFiles =>
                 AlbumEntry.Image(
-                  AlbumEntry.Id.unsafe(pathPrefix.dropRight(1)), // Remove trailing `/`
+                  AlbumEntry.Id.unsafe(pathPrefix.stripSuffix("/")),
                   info,
-                  imageFiles = imageFiles.map(pathPrefix + _.getName),
-                  rawFiles = rawFiles.map(pathPrefix + _.getName).toList,
+                  imageFiles = imageFiles.map(file => Paths.get(pathPrefix.stripPrefix("/") + file.getName)),
+                  rawFiles = rawFiles.map(file => Paths.get(pathPrefix.stripPrefix("/") + file.getName)).toList,
                 )
               )
           yield image
@@ -155,12 +160,11 @@ object DirectoryScanner:
     )
   end findAlbumEntries
 
-  def make(
-    config: DirectoryScannerConfig,
-    appStateManager: AppStateManager,
-  ): UIO[DirectoryScanner] = {
-    def scan: Task[Unit] =
+  def make(config: DirectoryScannerConfig)(appStateManager: AppStateManager): UIO[DirectoryScanner] = {
+    def scan(initialScan: Ref[Boolean]): Task[Unit] =
       for
+        initialScan <- initialScan.getAndSet(false)
+        _ <- ZIO.unless(initialScan)(ZIO.sleep(config.minScanInterval.seconds)) // Add delay for file writes to complete
         _ <- ZIO.log("Starting data directory scan")
         albumEntries <- findAlbumEntries(config.directory)
         _ <- ZIO.log("Directory scan finished.")
@@ -168,7 +172,9 @@ object DirectoryScanner:
         _ <- appStateManager.setState(newAppState)
       yield ()
 
-    DaemonRunner
-      .make(scan)
-      .map(scanRunner => DirectoryScannerImpl(config, appStateManager, scanRunner))
+    Ref.make(true).flatMap(initialScan =>
+      DaemonRunner
+        .make(scan(initialScan))
+        .map(scanRunner => DirectoryScannerImpl(config, appStateManager, scanRunner))
+    )
   }

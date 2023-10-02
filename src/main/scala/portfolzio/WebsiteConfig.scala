@@ -10,15 +10,15 @@ case class WebsiteConfig(
   previews: PreviewConfig,
 )
 
-/** @param directory path to the top level directory for albums
-  * @param scanInterval seconds after which to rescan the data directory
+/** @param directory       path to the top level directory for albums
+  * @param minScanInterval minimum seconds to sleep before rescanning the data directory
   */
-case class DirectoryScannerConfig(directory: String, scanInterval: Int)
+case class DirectoryScannerConfig(directory: String, minScanInterval: Int)
 
-/** @param size       pixel length of the longest side of the image
-  * @param quality    0 to 1.0 jpeg preview quality value
-  * @param previewDir path to the directory to use for generating preview images. Will be created if absent.
+/** @param size      pixel length of the longest side of the image
+  * @param quality   0 to 1.0 jpeg preview quality value
+  * @param directory path to the directory to use for generating preview images. Will be created if absent.
   */
-case class PreviewConfig(size: Int, quality: Float, previewDir: String = "/tmp/portfolzio-previews")
+case class PreviewConfig(size: Int, quality: Float, directory: String = "/tmp/portfolzio-previews")
 
 lazy val websiteConfig: Config[WebsiteConfig] = deriveConfig[WebsiteConfig]

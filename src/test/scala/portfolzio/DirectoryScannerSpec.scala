@@ -9,7 +9,7 @@ import zio.test.ZTestLogger.LogEntry
 import zio.test.{test, *}
 
 import java.io.File
-import java.nio.file.Files
+import java.nio.file.{Files, Paths}
 
 object DirectoryScannerSpec extends ZIOSpecDefault:
 
@@ -34,7 +34,7 @@ object DirectoryScannerSpec extends ZIOSpecDefault:
       val ExpectedImage = AlbumEntry.Image(
         AlbumEntry.Id.safe("day-night"),
         ImageInfo(description = Some("A composite photo of my backyard")),
-        imageFiles = NonEmptyList("/day-night/day-night.jpg"),
+        imageFiles = NonEmptyList(Paths.get("day-night/day-night.jpg")),
         rawFiles = List.empty,
       )
       val ExpectedAlbum = AlbumEntry.Album(

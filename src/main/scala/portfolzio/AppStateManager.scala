@@ -22,7 +22,7 @@ object AppState {
     ).as(AppState(HashMap.from(grouped.view.mapValues(_.head))))
 }
 
-type Callback = () => UIO[Unit]
+type Callback = UIO[Unit]
 
 /** Business logic core. Holds app state and notifies subscriber services when it changes. */
 class AppStateManager private(stateRef: Ref[AppState], subscribers: Ref[HashMap[String, Callback]]) {
@@ -32,7 +32,8 @@ class AppStateManager private(stateRef: Ref[AppState], subscribers: Ref[HashMap[
     for
       _ <- stateRef.set(newState)
       callbacks <- subscribers.get
-      _ <- ZIO.collectAll(callbacks.values.map(_.apply()))
+      runningCallbacks <- ZIO.collectAll(callbacks.values.map(_.fork))
+      _ <- ZIO.collectAll(runningCallbacks.map(_.join))
     yield ()
 
   /** @param subscriberId unique ID used for unsubscribing if needed */

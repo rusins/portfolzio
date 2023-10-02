@@ -26,6 +26,7 @@ Lower-sized preview images are generated for the images using ???
   If you have a photo library with more than 8192 photos, please increase the number of inotify watches
   the system allows to be made by writing to `/proc/sys/fs/inotify/max_user_watches`.
 - imagemagick, used for generating preview images
+- sha1sum, used for checking if preview images need to be regenerated
 
 ## Running in development mode
 

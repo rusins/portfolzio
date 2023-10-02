@@ -11,7 +11,6 @@ import java.io.IOException
 
 object Website:
   def apply(
-    config: WebsiteConfig,
     appStateManager: AppStateManager
   ): Http[Any, IOException, Request, Response] =
     Http.collectZIO[Request]:

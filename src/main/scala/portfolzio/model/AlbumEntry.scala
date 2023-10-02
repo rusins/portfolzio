@@ -3,6 +3,8 @@ package portfolzio.model
 import portfolzio.model.AlbumEntry.Id
 import zio.prelude.NonEmptyList
 
+import java.nio.file.{Path, Paths}
+
 enum AlbumEntry(val id: Id):
   /** @param id directory path + album file name */
   case Album(
@@ -11,14 +13,14 @@ enum AlbumEntry(val id: Id):
   ) extends AlbumEntry(id)
 
   /** @param id         path of image's parent directory
-    * @param imageFiles image file names
-    * @param rawFiles   raw file names
+    * @param imageFiles image file paths
+    * @param rawFiles   raw file paths
     */
   case Image(
     override val id: Id,
     info: ImageInfo,
-    imageFiles: NonEmptyList[String],
-    rawFiles: List[String],
+    imageFiles: NonEmptyList[Path],
+    rawFiles: List[Path],
   ) extends AlbumEntry(id)
 
 object AlbumEntry:
@@ -30,4 +32,6 @@ object AlbumEntry:
     def safe(input: String): Id = "/" + input.dropWhile(_ == '/').reverse.dropWhile(_ == '/').reverse
     def unsafe(input: String): Id = input
 
-  extension (id: Id) def value: String = id
+  extension (id: Id)
+    def value: String = id
+    def relativePath: Path = Paths.get(id.stripPrefix("/"))

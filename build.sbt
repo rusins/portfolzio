@@ -6,7 +6,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "portfolzio",
-    version := "0.1.0-SNAPSHOT",
+    version := "1.0.0-SNAPSHOT",
     scalaVersion := scala3Version,
     libraryDependencies ++= Seq(
       "dev.zio" %% "zio" % ZioVersion,
