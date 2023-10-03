@@ -1,5 +1,6 @@
 package portfolzio.website.html
 
+import portfolzio.model.AlbumEntry
 import zio.http.html.*
 import zio.http.html.Attributes.PartialAttribute
 
@@ -11,12 +12,13 @@ def headerTemplate(bodyContent: Html*): Html = html(
     link(relAttr := "stylesheet", hrefAttr := "css/unpoly.min.css"),
     script(srcAttr := "js/unpoly.min.js"),
     link(relAttr := "stylesheet", hrefAttr := "css/pure-min.css"),
+    link(relAttr := "stylesheet", hrefAttr := "css/pure-grids-responsive.css"),
     link(relAttr := "stylesheet", hrefAttr := "css/custom.css"),
   ),
   body(bodyContent *),
 )
 
-def navigationTemplate(middleContent: Html): Html = headerTemplate(
+def navigationTemplate(middleContent: Html*): Html = headerTemplate(
   header(
     // Left side of header
     div(
@@ -53,6 +55,24 @@ def navigationTemplate(middleContent: Html): Html = headerTemplate(
     ),
     // Right side of header
   ),
-  middleContent,
+  div(middleContent: _*),
   script(srcAttr := "js/main.js"),
 )
+
+def imageMozaic(images: List[AlbumEntry.Image]): Html =
+  div(
+    classAttr := List("pure-g"),
+    styleAttr := Seq("margin" -> "1em"),
+    images.map(image =>
+      div(
+        classAttr := List("pure-u-1", "pure-u-lg-1-2", "pure-u-xxl-1-3"),
+        div(
+          classAttr := List("photo-box", "animated-padding"),
+          a(
+            hrefAttr := "/image" + image.id.toString,
+            img(classAttr := List("pure-img"), srcAttr := "/preview" + image.id.toString),
+          ),
+        ),
+      )
+    ),
+  )

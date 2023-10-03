@@ -45,7 +45,7 @@ object PreviewGenerator:
           ).map(_.getOrElse(false))
         _ <- ZIO.when(!previewExists || !hashMatches)(
           ZIO.attemptBlockingIO(Files.createDirectories(previewPath.getParent)) *>
-            (Command("sha1sum", imagePath.toString) > new File(hashPath.toString)).requireSuccessLogErrors *>
+            (Command("sha1sum", imagePath.toString) > hashPath.toFile).requireSuccessLogErrors *>
             Command(
               "convert", // from imagemagick
               imagePath.toString,
