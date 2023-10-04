@@ -16,11 +16,12 @@ import java.io.IOException
 import java.nio.file.{Path, Paths}
 
 class Website(config: WebsiteConfig)(
-  appStateManager: AppStateManager
+    appStateManager: AppStateManager
 ):
   val previewPath: Path = Paths.get(config.previews.directory)
   private val cssPath = Paths.get("css")
   private val jsPath = Paths.get("js")
+  private val imgPath = Paths.get("img")
 
   private def streamResponse(stream: ZStream[Any, Throwable, Byte], mediaType: MediaType) =
     stream
@@ -67,7 +68,7 @@ class Website(config: WebsiteConfig)(
         appStateManager.getState.map(state =>
           Response.html(
             pageWithNavigation(
-              albumView(
+              albumView(state)(
                 rootAlbum = None,
                 state.orphans.collect[Album] {
                   case alb: Album => alb
@@ -99,7 +100,7 @@ class Website(config: WebsiteConfig)(
             case Some(album: Album) => state.children.get(album.id) match {
               case None           =>
                 Status.NotFound -> pageWithNavigation(html.h1(s"Album entries for $albumId not found! D:"))
-              case Some(children) => Status.Ok -> pageWithNavigation(albumView(Some(album), children))
+              case Some(children) => Status.Ok -> pageWithNavigation(albumView(state)(Some(album), children))
             }
             case _                  => Status.NotFound -> pageWithNavigation(html.h1(s"Album $albumId not found! D:"))
 
@@ -108,12 +109,14 @@ class Website(config: WebsiteConfig)(
 
       case Method.GET -> Root / "tag" / tag =>
         appStateManager.getState.map(state =>
-          Response.html(pageWithNavigation(albumView(
-            rootAlbum = None,
-            entries = state.albumEntries.values.collect {
-              case img: Image if img.info.tags.exists(_.contains(tag)) => img
-            }.toList,
-          )))
+          Response.html(pageWithNavigation(
+            html.h2(s"Images tagged: $tag"),
+            imageGrid(
+              state.albumEntries.values.collect {
+                case img: Image if img.info.tags.exists(_.contains(tag)) => img
+              }.toList
+            ),
+          ))
         )
 
       case Method.GET -> Root / "css" / file =>
@@ -130,10 +133,22 @@ class Website(config: WebsiteConfig)(
           resourceResponse(filePath, MediaType.text.javascript)
         )
 
+      case Method.GET -> Root / "img" / file =>
+        imgPath.safeResolve(Paths.get(file)).fold(
+          ZIO.succeed(Response(Status.Forbidden))
+        )(filePath =>
+          if (file.endsWith(".png")) resourceResponse(filePath, MediaType.image.png)
+          else if (file.endsWith(".jpg")) resourceResponse(filePath, MediaType.image.jpeg)
+          else resourceResponse(filePath, MediaType.any)
+        )
+
       case Method.GET -> Root / "preview" `/id` imageId =>
         val p = previewPath.safeResolve(Paths.get(imageId.toString.stripPrefix("/")))
         p.fold(
           ZIO.succeed(Response(Status.Forbidden))
         )(filePath =>
-          fileResponse(filePath, MediaType.image.jpeg)
+          if (filePath.toFile.exists())
+            fileResponse(filePath, MediaType.image.jpeg)
+          else
+            resourceResponse(imgPath.resolve("image-not-found.jpg"), MediaType.image.jpeg)
         )

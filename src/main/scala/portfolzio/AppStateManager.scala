@@ -26,6 +26,15 @@ case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
     val orphans = albumEntries.values.filter(entry => !hasParents.getOrElse(entry.id, false)).toSet
     (childMap.toMap, orphans)
   }
+
+  def resolveCoverImage(album: AlbumEntry.Id, visited: Set[AlbumEntry.Id] = Set.empty): Option[AlbumEntry.Id] =
+    if (visited.contains(album)) None
+    else
+      albumEntries.get(album) match
+        case None             => None
+        case Some(img: Image) => Some(img.id)
+        case Some(alb: Album) => children.get(alb.id)
+          .flatMap(_.headOption.flatMap(child => resolveCoverImage(child.id, visited + album)))
 }
 
 object AppState {
