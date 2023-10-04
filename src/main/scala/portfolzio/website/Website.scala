@@ -1,9 +1,10 @@
 package portfolzio.website
 
 import portfolzio.model.AlbumEntry
-import portfolzio.model.AlbumEntry.Image
+import portfolzio.model.AlbumEntry.{Album, Image}
 import portfolzio.util.*
-import portfolzio.website.html.{albumView, headerTemplate, imageGrid, navigationTemplate}
+import portfolzio.website.html.Pages.*
+import portfolzio.website.html.Templates.*
 import portfolzio.{AppStateManager, WebsiteConfig}
 import zio.*
 import zio.http.*
@@ -52,11 +53,11 @@ class Website(config: WebsiteConfig)(
       case Method.GET -> Root | Method.GET -> Root / "recent" =>
         appStateManager.getState.map(state =>
           Response.html(
-            navigationTemplate(
+            pageWithNavigation(
               imageGrid(
-                state.albumEntries.values.collect {
+                state.albumEntries.values.collect[Image] {
                   case img: Image => img
-                }.take(18).toList
+                }.toList.sortBy(_.info.time).reverse.take(18)
               )
             )
           )
@@ -65,10 +66,24 @@ class Website(config: WebsiteConfig)(
       case Method.GET -> Root / "albums" =>
         appStateManager.getState.map(state =>
           Response.html(
-            navigationTemplate(
+            pageWithNavigation(
               albumView(
-                List.empty
+                rootAlbum = None,
+                state.orphans.collect[Album] {
+                  case alb: Album => alb
+                }.toList.sortBy(_.name),
               )
+            )
+          )
+        )
+
+      case Method.GET -> Root / "tags" =>
+        appStateManager.getState.map(state =>
+          Response.html(
+            tagsPage(
+              state.albumEntries.collect {
+                case (_, img: Image) => img.info.tags.getOrElse(List.empty)
+              }.flatten.toSet.toList.sorted
             )
           )
         )
@@ -77,6 +92,29 @@ class Website(config: WebsiteConfig)(
         ZIO.succeed(Response.html(
           headerTemplate(html.h1(imageId.toString), html.img(html.srcAttr := "/preview" + imageId))
         ))
+
+      case Method.GET -> Root / "album" `/id` albumId =>
+        appStateManager.getState.map(state =>
+          val (status: Status, content: Html) = state.albumEntries.get(albumId) match
+            case Some(album: Album) => state.children.get(album.id) match {
+              case None           =>
+                Status.NotFound -> pageWithNavigation(html.h1(s"Album entries for $albumId not found! D:"))
+              case Some(children) => Status.Ok -> pageWithNavigation(albumView(Some(album), children))
+            }
+            case _                  => Status.NotFound -> pageWithNavigation(html.h1(s"Album $albumId not found! D:"))
+
+          Response.html(content, status)
+        )
+
+      case Method.GET -> Root / "tag" / tag =>
+        appStateManager.getState.map(state =>
+          Response.html(pageWithNavigation(albumView(
+            rootAlbum = None,
+            entries = state.albumEntries.values.collect {
+              case img: Image if img.info.tags.exists(_.contains(tag)) => img
+            }.toList,
+          )))
+        )
 
       case Method.GET -> Root / "css" / file =>
         cssPath.safeResolve(Paths.get(file)).fold(

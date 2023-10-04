@@ -12,7 +12,7 @@ case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
   /** children is a map from an album ID to its entries (subalbums and images)
     * orphans is a list of all album entries that are not contained within an album, making them top-level entries
     */
-  val (children, orphans): (Map[AlbumEntry.Id, List[AlbumEntry]], Set[AlbumEntry.Id]) = {
+  val (children, orphans): (Map[AlbumEntry.Id, List[AlbumEntry]], Set[AlbumEntry]) = {
     val hasParents = mutable.HashMap[AlbumEntry.Id, Boolean]()
     val childMap = mutable.HashMap[AlbumEntry.Id, List[AlbumEntry]]()
     albumEntries.values.collect {
@@ -23,7 +23,7 @@ case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
         childMap.addOne(id, resolvedChildren.flatMap(albumEntries.get))
       )
     }
-    val orphans = albumEntries.keys.filter(id => !hasParents.getOrElse(id, false)).toSet
+    val orphans = albumEntries.values.filter(entry => !hasParents.getOrElse(entry.id, false)).toSet
     (childMap.toMap, orphans)
   }
 }

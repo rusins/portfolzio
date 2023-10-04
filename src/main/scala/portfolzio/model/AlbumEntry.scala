@@ -1,6 +1,6 @@
 package portfolzio.model
 
-import portfolzio.model.AlbumEntry.{Id, IdSelector}
+import portfolzio.model.AlbumEntry.{Album, Id, IdSelector}
 import zio.prelude.NonEmptyList
 
 import java.nio.file.{Path, Paths}
@@ -26,8 +26,20 @@ enum AlbumEntry(val id: Id):
 
 object AlbumEntry:
 
+  extension (entries: List[AlbumEntry])
+    def partitionAlbumEntries: (List[Album], List[Image]) =
+      entries.foldLeft((List.empty[Album], List.empty[Image])) { case ((albumAcc, imageAcc), image) =>
+        image match {
+          case img: Image => (albumAcc, img :: imageAcc)
+          case alb: Album => (alb :: albumAcc, imageAcc)
+        }
+      }
+
   /** String that begins with a '/' but does not end with one */
   opaque type Id = String
+
+  extension (album: Album)
+    def name: String = album.id.lastPart
 
   object Id:
     def safe(input: String): Id = "/" + input.dropWhile(_ == '/').reverse.dropWhile(_ == '/').reverse
@@ -36,6 +48,7 @@ object AlbumEntry:
   extension (id: Id)
     def value: String = id
     def relativePath: Path = Paths.get(id.stripPrefix("/"))
+    def lastPart: String = id.reverse.takeWhile(_ != '/').reverse
 
   /** String possibly containing * wildcards, to match with multiple IDs */
   opaque type IdSelector = String

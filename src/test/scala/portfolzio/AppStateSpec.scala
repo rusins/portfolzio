@@ -31,7 +31,7 @@ object AppStateSpec extends ZIOSpecDefault {
       val alb2 = album("/dir/alb2", List("/dir/img1"))
       val entries = List(img1, img2, img3, alb1, alb2)
       for appState <- AppState.fromRawEntries(entries)
-        yield assertTrue(appState.orphans.iterator.sameElements(List(img3, alb1).map(_.id))) &&
+        yield assertTrue(appState.orphans.iterator.sameElements(List(img3, alb1))) &&
           assert(appState.children.get(alb1.id))(isSome(hasSameElementsDistinct(List(img1, img2, alb2)))) &&
           assert(appState.children.get(alb2.id))(isSome(hasSameElementsDistinct(List(img1))))
     }
