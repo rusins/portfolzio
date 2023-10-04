@@ -1,11 +1,32 @@
 package portfolzio
 
 import portfolzio.model.AlbumEntry
+import portfolzio.model.AlbumEntry.*
 import zio.*
 
 import scala.collection.immutable.HashMap
+import scala.collection.mutable
 
-case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry])
+case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
+
+  /** children is a map from an album ID to its entries (subalbums and images)
+    * orphans is a list of all album entries that are not contained within an album, making them top-level entries
+    */
+  val (children, orphans): (Map[AlbumEntry.Id, List[AlbumEntry]], Set[AlbumEntry.Id]) = {
+    val hasParents = mutable.HashMap[AlbumEntry.Id, Boolean]()
+    val childMap = mutable.HashMap[AlbumEntry.Id, List[AlbumEntry]]()
+    albumEntries.values.collect {
+      case Album(id, children) => children.foreach(selector =>
+        val parentPath = id.value.reverse.dropWhile(_ != '/').drop(1).reverse
+        val resolvedChildren = selector.findMatches(parentPath, albumEntries.keys.toList)
+        resolvedChildren.foreach(child => hasParents.addOne(child, true))
+        childMap.addOne(id, resolvedChildren.flatMap(albumEntries.get))
+      )
+    }
+    val orphans = albumEntries.keys.filter(id => !hasParents.getOrElse(id, false)).toSet
+    (childMap.toMap, orphans)
+  }
+}
 
 object AppState {
   def empty: AppState = AppState(HashMap.empty)

@@ -1,5 +1,6 @@
 package portfolzio
 
+import portfolzio.model.AlbumEntry.IdSelector
 import portfolzio.model.{AlbumEntry, ImageInfo}
 import zio.*
 import zio.logging.LogFilter
@@ -39,7 +40,7 @@ object DirectoryScannerSpec extends ZIOSpecDefault:
       )
       val ExpectedAlbum = AlbumEntry.Album(
         AlbumEntry.Id.safe("random"),
-        children = Vector("day-night"),
+        children = List(IdSelector.fromString("day-night")),
       )
       for entries <- DirectoryScanner.findAlbumEntries(DataDir)
         yield assert(entries)(contains(ExpectedImage)) && assert(entries)(contains(ExpectedAlbum))

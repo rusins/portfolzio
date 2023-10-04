@@ -1,5 +1,6 @@
 package portfolzio
 
+import portfolzio.model.AlbumEntry.IdSelector
 import portfolzio.model.{AlbumEntry, ImageInfo}
 import portfolzio.util.Regex.{AlbumRegex, ImageRegex, RawFileRegex}
 import portfolzio.util.{DaemonRunner, Regex, Utf8Checker}
@@ -119,7 +120,7 @@ object DirectoryScanner:
                     AlbumEntry
                       .Album(
                         AlbumEntry.Id.safe(pathPrefix + file.getName.stripSuffix(".album")),
-                        children = fileContents.split('\n').toVector,
+                        children = fileContents.split('\n').map(IdSelector.fromString).toList,
                       )
                   )
                 ),

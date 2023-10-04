@@ -3,7 +3,7 @@ package portfolzio.website
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.Image
 import portfolzio.util.*
-import portfolzio.website.html.{headerTemplate, imageMozaic, navigationTemplate}
+import portfolzio.website.html.{albumView, headerTemplate, imageGrid, navigationTemplate}
 import portfolzio.{AppStateManager, WebsiteConfig}
 import zio.*
 import zio.http.*
@@ -53,10 +53,21 @@ class Website(config: WebsiteConfig)(
         appStateManager.getState.map(state =>
           Response.html(
             navigationTemplate(
-              imageMozaic(
+              imageGrid(
                 state.albumEntries.values.collect {
                   case img: Image => img
-                }.toList
+                }.take(18).toList
+              )
+            )
+          )
+        )
+
+      case Method.GET -> Root / "albums" =>
+        appStateManager.getState.map(state =>
+          Response.html(
+            navigationTemplate(
+              albumView(
+                List.empty
               )
             )
           )

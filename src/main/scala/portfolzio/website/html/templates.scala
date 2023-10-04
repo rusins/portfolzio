@@ -12,7 +12,6 @@ def headerTemplate(bodyContent: Html*): Html = html(
     link(relAttr := "stylesheet", hrefAttr := "css/unpoly.min.css"),
     script(srcAttr := "js/unpoly.min.js"),
     link(relAttr := "stylesheet", hrefAttr := "css/pure-min.css"),
-    link(relAttr := "stylesheet", hrefAttr := "css/pure-grids-responsive.css"),
     link(relAttr := "stylesheet", hrefAttr := "css/custom.css"),
   ),
   body(bodyContent *),
@@ -59,20 +58,18 @@ def navigationTemplate(middleContent: Html*): Html = headerTemplate(
   script(srcAttr := "js/main.js"),
 )
 
-def imageMozaic(images: List[AlbumEntry.Image]): Html =
+def imageGrid(images: List[AlbumEntry.Image]): Html =
   div(
-    classAttr := List("pure-g"),
     styleAttr := Seq("margin" -> "1em"),
-    images.map(image =>
-      div(
-        classAttr := List("pure-u-1", "pure-u-lg-1-2", "pure-u-xxl-1-3"),
+    section(
+      classAttr := List("columns"),
+      images.map(image =>
         div(
           classAttr := List("photo-box", "animated-padding"),
-          a(
-            hrefAttr := "/image" + image.id.toString,
-            img(classAttr := List("pure-img"), srcAttr := "/preview" + image.id.toString),
-          ),
+          a(hrefAttr := "/image" + image.id, img(srcAttr := "/preview" + image.id)),
         ),
-      )
+      ),
     ),
   )
+
+def albumView(albums: List[AlbumEntry.Album]): Html = div()

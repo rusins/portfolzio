@@ -78,3 +78,24 @@ header {
 .animated-padding:hover img {
     transform: scale(1.05);
 }
+
+.columns {
+    column-count: 1;
+    column-gap: 0;
+}
+
+@media (min-width: 48em) {
+    .columns {
+        column-count: 2;
+    }
+}
+
+@media (min-width: 120em) {
+    .columns {
+        column-count: 3;
+    }
+}
+
+.columns > div:first-child {
+    margin-top: 0em; /* margin-top only affects first column for some reason */
+}
