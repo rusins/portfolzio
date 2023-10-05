@@ -17,6 +17,8 @@ object Templates:
       script(srcAttr := "/js/unpoly.min.js"),
       link(relAttr := "stylesheet", hrefAttr := "/css/pure-min.css"),
       link(relAttr := "stylesheet", hrefAttr := "/css/custom.css"),
+      link(relAttr := "stylesheet", hrefAttr := "https://fonts.googleapis.com/css?family=Raleway"),
+      script(srcAttr := "/js/main.js"),
     ),
     body(bodyContent *),
   )
@@ -59,16 +61,18 @@ object Templates:
       // Right side of header
     ),
     div(middleContent: _*),
-    script(srcAttr := "js/main.js"),
   )
 
-  def pageWithNavigation(content: Html*) = headerTemplate(navigationTemplate(content *))
+  def pageWithNavigation(content: Html*): Html = headerTemplate(navigationTemplate(content *))
 
   def photoBoxes(images: List[Image]): Html =
     images.map(image =>
       div(
         classAttr := List("photo-box", "animated-padding"),
-        a(hrefAttr := "/image" + image.id, img(srcAttr := "/preview" + image.id)),
+        a(
+          hrefAttr := "/image" + image.id,
+          img(srcAttr := "/preview" + image.id),
+        ),
       ),
     )
 
@@ -82,31 +86,73 @@ object Templates:
     )
 
   def albumView(state: AppState)(rootAlbum: Option[Album], entries: List[AlbumEntry]): Html =
+    val MaxWidth = "120em"
     val (albums, images) = entries.partitionAlbumEntries
     div(
-      h1(rootAlbum.map(_.name).getOrElse("")),
+      h1(
+        styleAttr := Seq("text-align" -> "center", "font-family" -> "'Raleway', sans-serif", "font-weight" -> "300"),
+        rootAlbum.map(_.name).getOrElse(""),
+      ),
       div(
-        styleAttr := Seq("max-width" -> "120em"),
+        classAttr := List("center"),
+        styleAttr := Seq("max-width" -> MaxWidth),
         div(
           albums.zipWithIndex.map { case (album, index) =>
             val coverId = state.resolveCoverImage(album.id).getOrElse("/not-found")
-            val imagePart = div(
-              classAttr := List("photo-box", "pure-u-2-3"),
+
+            def imagePart(align: "left" | "right") = div(
+              styleAttr := Seq("align" -> align, "flex-shrink" -> "1"),
+              classAttr := List("photo-box"),
               a(
                 hrefAttr := "/album" + album.id,
-                img(styleAttr := Seq("max-width" -> "60em"), srcAttr := s"/preview$coverId"),
+                img(
+                  styleAttr := Seq("max-height" -> "36em"),
+                  srcAttr := s"/preview$coverId",
+                ),
               ),
             )
+
             val textPart = div(
-              classAttr := List("pure-u-1-3"),
-              a(hrefAttr := "/album" + album.id, h1(album.name)),
+              styleAttr := Seq(
+                "width" -> "48em",
+                "flex-grow" -> "1",
+                "text-align" -> "center",
+                "font-family" -> "'Raleway', sans-serif",
+              ),
+              a(
+                styleAttr := Seq("color" -> "black", "text-decoration" -> "none"),
+                hrefAttr := "/album" + album.id,
+                h1(
+                  styleAttr := Seq("font-size" -> "4em"),
+                  album.name,
+                ),
+              ),
             )
+            val containerStyles =
+              styleAttr := Seq(
+                "display" -> "flex",
+                "align-items" -> "center",
+                "background-color" -> "lightgrey",
+                "margin" -> "1em",
+              )
             if (index % 2 == 0)
-              div(styleAttr := Seq("background-color" -> "lightgrey"), imagePart, textPart)
+              div(
+                containerStyles,
+                imagePart(align = "left"),
+                textPart,
+              )
             else
-              div(styleAttr := Seq("background-color" -> "lightgrey"), textPart, imagePart)
+              div(
+                containerStyles,
+                textPart,
+                imagePart(align = "right"),
+              )
           } *
         ),
       ),
-      photoBoxes(images),
+      div(
+        classAttr := List("center"),
+        styleAttr := Seq("max-width" -> MaxWidth),
+        photoBoxes(images),
+      ),
     )

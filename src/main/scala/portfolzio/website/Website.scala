@@ -47,9 +47,9 @@ class Website(config: WebsiteConfig)(
 
   object `/id`:
     def unapply(path: zio.http.Path): Option[(zio.http.Path, AlbumEntry.Id)] =
-      Option.when(path.segments.length > 2)((path.take(2) -> AlbumEntry.Id.safe(albumEntryIdFromPath(path, index = 2))))
+      Option.when(path.segments.length > 2)(path.take(2) -> AlbumEntry.Id.safe(albumEntryIdFromPath(path, index = 2)))
 
-  def http: Http[Any, Throwable, Request, Response] =
+  val app: Http[Any, Throwable, Request, Response] =
     Http.collectZIO[Request]:
       case Method.GET -> Root | Method.GET -> Root / "recent" =>
         appStateManager.getState.map(state =>
@@ -90,9 +90,11 @@ class Website(config: WebsiteConfig)(
         )
 
       case Method.GET -> Root / "image" `/id` imageId =>
-        ZIO.succeed(Response.html(
-          headerTemplate(html.h1(imageId.toString), html.img(html.srcAttr := "/preview" + imageId))
-        ))
+        appStateManager.getState.map(state =>
+          state.albumEntries.get(imageId) match
+            case Some(image: Image) => Response.html(imagePage(image))
+            case _                  => Response.html(notFoundPage("Image not found"), Status.NotFound)
+        )
 
       case Method.GET -> Root / "album" `/id` albumId =>
         appStateManager.getState.map(state =>
@@ -143,7 +145,7 @@ class Website(config: WebsiteConfig)(
         )
 
       case Method.GET -> Root / "preview" `/id` imageId =>
-        val p = previewPath.safeResolve(Paths.get(imageId.toString.stripPrefix("/")))
+        val p = previewPath.safeResolve(Paths.get(imageId.value.stripPrefix("/")))
         p.fold(
           ZIO.succeed(Response(Status.Forbidden))
         )(filePath =>
