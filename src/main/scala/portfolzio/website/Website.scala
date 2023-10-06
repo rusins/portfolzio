@@ -111,14 +111,7 @@ class Website(config: WebsiteConfig)(
 
       case Method.GET -> Root / "tag" / tag =>
         appStateManager.getState.map(state =>
-          Response.html(pageWithNavigation(
-            html.h2(s"Images tagged: $tag"),
-            imageGrid(
-              state.albumEntries.values.collect {
-                case img: Image if img.info.tags.exists(_.contains(tag)) => img
-              }.toList
-            ),
-          ))
+          Response.html(tagPage(state)(tag))
         )
 
       case Method.GET -> Root / "css" / file =>

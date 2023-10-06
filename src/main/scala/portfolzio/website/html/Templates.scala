@@ -3,6 +3,7 @@ package portfolzio.website.html
 import portfolzio.AppState
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.*
+import portfolzio.website.html.CustomAttributes.*
 import zio.http.html.*
 import zio.http.html.Attributes.PartialAttribute
 
@@ -12,18 +13,24 @@ object Templates:
     head(
       meta(charsetAttr := "utf-8"),
       meta(nameAttr := "viewport", contentAttr := "width=device-width, initial-scale=1.0"),
+      // Camera emoji as favicon
+      link(
+        relAttr := "icon",
+        hrefAttr := "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%2210 0 100 100%22><text y=%22.90em%22 font-size=%2290%22>📷\uD83D\uDCF7</text></svg>",
+      ),
       // Include Unpoly before your own stylesheets and JavaScripts
       link(relAttr := "stylesheet", hrefAttr := "/css/unpoly.min.css"),
-      script(srcAttr := "/js/unpoly.min.js"),
       link(relAttr := "stylesheet", hrefAttr := "/css/pure-min.css"),
       link(relAttr := "stylesheet", hrefAttr := "/css/custom.css"),
       link(relAttr := "stylesheet", hrefAttr := "https://fonts.googleapis.com/css?family=Raleway"),
+      // Include Unpoly before your own stylesheets and JavaScripts
+      script(srcAttr := "/js/unpoly.min.js"),
       script(srcAttr := "/js/main.js"),
     ),
     body(bodyContent *),
   )
 
-  def navigationTemplate(middleContent: Html*): Html = headerTemplate(
+  def pageWithNavigation(content: Html*): Html = headerTemplate(
     header(
       // Left side of header
       div(
@@ -60,10 +67,8 @@ object Templates:
       ),
       // Right side of header
     ),
-    div(middleContent: _*),
+    main(content: _*),
   )
-
-  def pageWithNavigation(content: Html*): Html = headerTemplate(navigationTemplate(content *))
 
   def photoBoxes(images: List[Image]): Html =
     images.map(image =>
@@ -71,6 +76,8 @@ object Templates:
         classAttr := List("photo-box", "animated-padding"),
         a(
           hrefAttr := "/image" + image.id,
+          upLayerNewAttr,
+          upSizeAttr := "large",
           img(srcAttr := "/preview" + image.id),
         ),
       ),
@@ -85,14 +92,16 @@ object Templates:
       ),
     )
 
+  def centeredTopText(text: String): Html = h1(
+    styleAttr := Seq("text-align" -> "center", "font-family" -> "'Raleway', sans-serif", "font-weight" -> "300"),
+    text,
+  )
+
   def albumView(state: AppState)(rootAlbum: Option[Album], entries: List[AlbumEntry]): Html =
     val MaxWidth = "120em"
     val (albums, images) = entries.partitionAlbumEntries
     div(
-      h1(
-        styleAttr := Seq("text-align" -> "center", "font-family" -> "'Raleway', sans-serif", "font-weight" -> "300"),
-        rootAlbum.map(_.name).getOrElse(""),
-      ),
+      centeredTopText(rootAlbum.map(_.name).getOrElse("")),
       div(
         classAttr := List("center"),
         styleAttr := Seq("max-width" -> MaxWidth),

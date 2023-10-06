@@ -15,7 +15,6 @@ header {
 .navigation {
     position: absolute;
     left: 1em;
-    z-index: 9999;
 }
 
 .center {
@@ -59,6 +58,7 @@ header {
     }
     .navigation.open {
         left: 0;  /* Show menu on-screen */
+        z-index: 9999;
     }
     #menu {
         list-style-type: none;

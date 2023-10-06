@@ -1,5 +1,6 @@
 package portfolzio.website.html
 
+import portfolzio.AppState
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.Image
 import portfolzio.website.html.Templates.*
@@ -23,8 +24,17 @@ object Pages {
     )
   )
 
+  def tagPage(state: AppState)(tag: String): Html = pageWithNavigation(
+    centeredTopText(s"Images tagged: $tag"),
+    imageGrid(
+      state.albumEntries.values.collect {
+        case img: Image if img.info.tags.exists(_.contains(tag)) => img
+      }.toList
+    ),
+  )
+
   def imagePage(image: Image): Html = {
-    headerTemplate(
+    headerTemplate(main(
       div(
         classAttr := List("photo-box", "center"),
         styleAttr := Seq("max-width" -> "80vh"),
@@ -89,7 +99,7 @@ object Pages {
           ),
         ),
       ),
-    )
+    ))
   }
 
   def notFoundPage(message: String): Html = headerTemplate(h1(styleAttr := Seq("text-align" -> "center"), message))
