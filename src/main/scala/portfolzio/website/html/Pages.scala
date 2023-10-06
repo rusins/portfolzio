@@ -67,7 +67,7 @@ object Pages {
               ),
               hrefAttr := s"/download/${ downloadPath.toString }",
               downloadAttr := "Raitis_Krikis" + downloadPath.toString.replaceAll("/", "-"),
-              "Download image",
+              "Download Photo",
             )
           ).toSeq,
         ),
@@ -82,7 +82,7 @@ object Pages {
               ),
               hrefAttr := s"/download/${ downloadPath.toString }",
               downloadAttr := "Raitis_Krikis" + downloadPath.toString.replaceAll("/", "-"),
-              "Download raw file",
+              "Download Raw File",
             )
           ).toSeq,
         ),

@@ -50,13 +50,31 @@ object Templates:
           ),
           li(
             classAttr := List("pure-menu-item"),
-            a(classAttr := List("pure-menu-link"), hrefAttr := "/recent", "Recent"),
+            a(
+              classAttr := List("pure-menu-link"),
+              upInstantAttr,
+              hrefAttr := "/recent",
+              "Recent",
+            ),
           ),
           li(
             classAttr := List("pure-menu-item"),
-            a(classAttr := List("pure-menu-link"), hrefAttr := "/albums", "Albums"),
+            a(
+              classAttr := List("pure-menu-link"),
+              upInstantAttr,
+              hrefAttr := "/albums",
+              "Albums",
+            ),
           ),
-          li(classAttr := List("pure-menu-item"), a(classAttr := List("pure-menu-link"), hrefAttr := "/tags", "Tags")),
+          li(
+            classAttr := List("pure-menu-item"),
+            a(
+              classAttr := List("pure-menu-link"),
+              upPreloadAttr,
+              hrefAttr := "/tags",
+              "Tags",
+            ),
+          ),
         ),
       ),
       // Middle of header
@@ -112,12 +130,9 @@ object Templates:
             def imagePart(align: "left" | "right") = div(
               styleAttr := Seq("align" -> align, "flex-shrink" -> "1"),
               classAttr := List("photo-box"),
-              a(
-                hrefAttr := "/album" + album.id,
-                img(
-                  styleAttr := Seq("max-height" -> "36em"),
-                  srcAttr := s"/preview$coverId",
-                ),
+              img(
+                styleAttr := Seq("max-height" -> "36em"),
+                srcAttr := s"/preview$coverId",
               ),
             )
 
@@ -128,13 +143,10 @@ object Templates:
                 "text-align" -> "center",
                 "font-family" -> "'Raleway', sans-serif",
               ),
-              a(
-                styleAttr := Seq("color" -> "black", "text-decoration" -> "none"),
-                hrefAttr := "/album" + album.id,
-                h1(
-                  styleAttr := Seq("font-size" -> "4em"),
-                  album.name,
-                ),
+              upTransitionAttr := "move-left",
+              h1(
+                styleAttr := Seq("font-size" -> "4em"),
+                album.name,
               ),
             )
             val containerStyles =
@@ -144,18 +156,26 @@ object Templates:
                 "background-color" -> "lightgrey",
                 "margin" -> "1em",
               )
-            if (index % 2 == 0)
-              div(
-                containerStyles,
-                imagePart(align = "left"),
-                textPart,
-              )
-            else
-              div(
-                containerStyles,
-                textPart,
-                imagePart(align = "right"),
-              )
+            a(
+              upTransitionAttr := "move-left",
+              styleAttr := Seq(
+                "color" -> "black",
+                "text-decoration" -> "none",
+              ),
+              hrefAttr := "/album" + album.id,
+              if (index % 2 == 0)
+                div(
+                  containerStyles,
+                  imagePart(align = "left"),
+                  textPart,
+                )
+              else
+                div(
+                  containerStyles,
+                  textPart,
+                  imagePart(align = "right"),
+                ),
+            )
           } *
         ),
       ),

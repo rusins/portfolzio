@@ -13,4 +13,8 @@ object CustomAttributes {
   val upLayerAttr: PartialAttribute[String] = PartialAttribute("up-layer")
   val upLayerNewAttr: Html = upLayerAttr := "new"
   val upSizeAttr: PartialAttribute[String] = PartialAttribute("up-size")
+
+  val upTransitionAttr: PartialAttribute[String] = PartialAttribute("up-transition")
+
+  val upExpandAttr: PartialAttribute[String] = PartialAttribute("up-expand")
 }
