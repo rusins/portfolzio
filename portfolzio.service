@@ -1,0 +1,12 @@
+[Unit]
+Description=Photography website
+After=network.target
+
+[Service]
+User=portfolzio
+Group=portfolzio
+WorkingDirectory=/home/portfolzio
+ExecStart=java -jar /home/portfolzio/portfolzio.jar
+
+[Install]
+WantedBy=multi-user.target

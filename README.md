@@ -32,3 +32,11 @@ Lower-sized preview images are generated for the images using ???
 
 1. Launch sbt shell
 2. `~ reStart`
+
+## Running in production
+
+1. Launch sbt shell
+2. `assembly`
+
+There is a `portfolzio.service` systemd service file available for copy-pasting into `/etc/systemd/system` to start
+the app that way.

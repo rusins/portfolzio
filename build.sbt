@@ -24,3 +24,9 @@ lazy val root = project
   )
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+
+// https://stackoverflow.com/a/48173709
+assembly / assemblyMergeStrategy := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x                             => MergeStrategy.first
+}
