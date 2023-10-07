@@ -1,6 +1,6 @@
 package portfolzio.util
 
-import portfolzio.util.Regex.{AlbumRegex, ImageRegex, RawFileRegex}
+import portfolzio.util.Regex.{AlbumRegex, DelimiterRegex, ImageRegex, RawFileRegex}
 import zio.*
 import zio.test.*
 import zio.test.Assertion.*
@@ -24,6 +24,11 @@ object RegexSpec extends ZIOSpecDefault {
     test("AlbumRegex") {
       assert("Norway.album")(matchesRegex(AlbumRegex.regex)) &&
         assert("Norway")(not(matchesRegex(AlbumRegex.regex)))
+    },
+    test("DelimiterRegex") {
+      assert("me.enjoying-a_peaceful\\walk".replaceAll(DelimiterRegex.regex, " "))(
+        equalTo("me enjoying a peaceful walk")
+      )
     },
   )
 }

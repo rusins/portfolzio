@@ -38,6 +38,10 @@ header {
     display: inline-block; /* Horizontal menu */
 }
 
+.album-link-text {
+    font-size: 4em;
+}
+
 /* Hide horizontal menu and show menu button on smaller screens */
 @media (max-width: 48em) {
     #menuToggle, #closeMenu {
@@ -64,6 +68,10 @@ header {
         list-style-type: none;
         padding: 0;
     }
+
+    .album-link-text {
+        font-size: 2em;
+    }
 }
 
 .photo-box img {
@@ -77,11 +85,12 @@ header {
 .animated-padding {
     margin: 0.5em;
     overflow: hidden;
-    img {
-        display: block;
-        transform: scale(1);
-        transition: transform 0.3s ease-in-out;
-    }
+}
+
+.animated-padding img {
+    display: block;
+    transform: scale(1);
+    transition: transform 0.3s ease-in-out;
 }
 
 .animated-padding:hover img {
@@ -99,7 +108,7 @@ header {
     }
 }
 
-@media (min-width: 120em) {
+@media (min-width: 110em) {
     .columns {
         column-count: 3;
     }

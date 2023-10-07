@@ -1,11 +1,13 @@
 # Portfolzio
 
-My photography portfolio portfolzio.website. Written in Scala with ZIO.
+My photography portfolio portfolzio.website. Written in Scala with ZIO. See it in action:
+[raitis.krikis.id.lv](https://raitis.krikis.id.lv)
 
 ## How it works
 
 For each photo you want to display, you create a directory. The directory can be nested within other directories
 however deep you like. The directory path (using `/` as the separator character) is that image's ID.
+(Image IDs are used for alt text in the html.)
 Inside that directory you should have:
 
 - One or more image files, with the name matching the regex `(?i).*\.(jpg|jpeg)$`
@@ -18,7 +20,7 @@ Inside any directory you can create text files ending with `.album` which behave
 directory.
 
 The server observes the directory for changes and refreshes periodically to reflect those changes.
-Lower-sized preview images are generated for the images using ???
+Lower-sized preview images are generated for the images using imagemagick.
 
 ## Dependencies
 
@@ -37,6 +39,8 @@ Lower-sized preview images are generated for the images using ???
 
 1. Launch sbt shell
 2. `assembly`
+3. Copy the generated fat-jar file to your server
+4. run it with Java: `java -jar portfolzio.jar`
 
 There is a `portfolzio.service` systemd service file available for copy-pasting into `/etc/systemd/system` to start
-the app that way.
+the app that way. Use a dedicated webserver like Caddy for HTTPS support.

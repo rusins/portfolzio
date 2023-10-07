@@ -9,4 +9,6 @@ object Regex {
   val RawFileRegex: Regex = "(?i).*\\.(arw|raw)$".r
   // Update README.md if you significantly change this
   val AlbumRegex: Regex = ".*\\.album$".r
+
+  val DelimiterRegex: Regex = "[-_.\\\\]".r
 }

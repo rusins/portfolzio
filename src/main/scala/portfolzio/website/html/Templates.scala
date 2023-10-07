@@ -3,16 +3,22 @@ package portfolzio.website.html
 import portfolzio.AppState
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.*
+import portfolzio.util.Regex.DelimiterRegex
 import portfolzio.website.html.CustomAttributes.*
 import zio.http.html.*
 import zio.http.html.Attributes.PartialAttribute
 
 object Templates:
 
+  def altTextFromId(imageId: AlbumEntry.Id): Html =
+    val text = "An image of " + imageId.lastPart.replaceAll(DelimiterRegex.regex, " ") + "."
+    altAttr := text
+
   def headerTemplate(bodyContent: Html*): Html = html(
     head(
       meta(charsetAttr := "utf-8"),
       meta(nameAttr := "viewport", contentAttr := "width=device-width, initial-scale=1.0"),
+      title("Raitis Kriķis Photography"),
       // Camera emoji as favicon
       link(
         relAttr := "icon",
@@ -54,6 +60,7 @@ object Templates:
               classAttr := List("pure-menu-link"),
               upInstantAttr,
               hrefAttr := "/recent",
+              onClickAttr := "toggleMenu()",
               "Recent",
             ),
           ),
@@ -63,6 +70,7 @@ object Templates:
               classAttr := List("pure-menu-link"),
               upInstantAttr,
               hrefAttr := "/albums",
+              onClickAttr := "toggleMenu()",
               "Albums",
             ),
           ),
@@ -72,6 +80,7 @@ object Templates:
               classAttr := List("pure-menu-link"),
               upPreloadAttr,
               hrefAttr := "/tags",
+              onClickAttr := "toggleMenu()",
               "Tags",
             ),
           ),
@@ -96,7 +105,7 @@ object Templates:
           hrefAttr := "/image" + image.id,
           upLayerNewAttr,
           upSizeAttr := "large",
-          img(srcAttr := "/preview" + image.id),
+          img(srcAttr := "/preview" + image.id, altTextFromId(image.id)),
         ),
       ),
     )
@@ -104,7 +113,7 @@ object Templates:
   def imageGrid(images: List[AlbumEntry.Image]): Html =
     div(
       styleAttr := Seq("margin" -> "1em"),
-      section(
+      div(
         classAttr := List("columns"),
         photoBoxes(images),
       ),
@@ -125,14 +134,15 @@ object Templates:
         styleAttr := Seq("max-width" -> MaxWidth),
         div(
           albums.zipWithIndex.map { case (album, index) =>
-            val coverId = state.resolveCoverImage(album.id).getOrElse("/not-found")
+            val coverId = state.resolveCoverImage(album.id)
 
             def imagePart(align: "left" | "right") = div(
               styleAttr := Seq("align" -> align, "flex-shrink" -> "1"),
               classAttr := List("photo-box"),
               img(
                 styleAttr := Seq("max-height" -> "36em"),
-                srcAttr := s"/preview$coverId",
+                srcAttr := s"/preview${ coverId.getOrElse("/not-found") }",
+                coverId.fold(altAttr := "Image not found.")(altTextFromId),
               ),
             )
 
@@ -145,7 +155,7 @@ object Templates:
               ),
               upTransitionAttr := "move-left",
               h1(
-                styleAttr := Seq("font-size" -> "4em"),
+                classAttr := List("album-link-text"),
                 album.name,
               ),
             )
