@@ -3,11 +3,13 @@ package portfolzio.website.html
 import portfolzio.AppState
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.Image
-import portfolzio.website.html.Templates.*
 import zio.http.html.*
 import zio.http.html.Attributes.PartialAttribute
 
-object Pages {
+class Pages(titleText: String, showLicense: Boolean) {
+
+  private val templates = Templates(titleText)
+  import templates.*
 
   def tagsPage(tags: List[String]): Html = pageWithNavigation(
     div(
@@ -63,6 +65,7 @@ object Pages {
               styleAttr := Seq(
                 "font-family" -> "'Raleway', sans-serif",
                 "font-weight" -> "200",
+                "font-size" -> "2em",
                 "color" -> "black",
               ),
               hrefAttr := s"/download/${ downloadPath.toString }",
@@ -78,6 +81,7 @@ object Pages {
               styleAttr := Seq(
                 "font-family" -> "'Raleway', sans-serif",
                 "font-weight" -> "200",
+                "font-size" -> "2em",
                 "color" -> "black",
               ),
               hrefAttr := s"/download/${ downloadPath.toString }",
@@ -86,6 +90,11 @@ object Pages {
             )
           ).toSeq,
         ),
+        if (showLicense) div(
+          styleAttr := Seq("text-align" -> "center", "margin" -> "0.5em"),
+          span("By downloading, you agree to the the ", a(hrefAttr := "/license", "License Terms")),
+        )
+        else div(),
       ),
       div(
         classAttr := List("pure-menu"),
@@ -101,6 +110,23 @@ object Pages {
       ),
     ))
   }
+
+  def licensePage(licenseContents: String): Html = pageWithNavigation(
+    div(
+      styleAttr := Seq(
+        "text-align" -> "center",
+        "font-size" -> "4em",
+        "font-family" -> "'Raleway', sans-serif",
+        "font-weight" -> "200",
+      ),
+      "License",
+    ),
+    div(
+      classAttr := List("center"),
+      styleAttr := Seq("max-width" -> "80em"),
+      licenseContents,
+    ),
+  )
 
   def notFoundPage(message: String): Html = headerTemplate(h1(styleAttr := Seq("text-align" -> "center"), message))
 }

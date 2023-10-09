@@ -4,10 +4,16 @@ import zio.Config
 import zio.config.*
 import zio.config.magnolia.*
 
+/** @param port        network port for the webserver to listen to requests from
+  * @param title       website title displayed on the website
+  * @param licenseFile optional path to a license file for the images hosted on the website
+  */
 case class WebsiteConfig(
   port: Int,
+  title: String = "",
   data: DirectoryScannerConfig,
   previews: PreviewConfig,
+  licenseFile: Option[String],
 )
 
 /** @param directory       path to the top level directory for albums

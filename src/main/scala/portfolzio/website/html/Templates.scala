@@ -8,7 +8,7 @@ import portfolzio.website.html.CustomAttributes.*
 import zio.http.html.*
 import zio.http.html.Attributes.PartialAttribute
 
-object Templates:
+class Templates(titleText: String):
 
   def altTextFromId(imageId: AlbumEntry.Id): Html =
     val text = "An image of " + imageId.lastPart.replaceAll(DelimiterRegex.regex, " ") + "."
@@ -18,7 +18,7 @@ object Templates:
     head(
       meta(charsetAttr := "utf-8"),
       meta(nameAttr := "viewport", contentAttr := "width=device-width, initial-scale=1.0"),
-      title("Raitis Kriķis Photography"),
+      title(titleText),
       link(relAttr := "icon", hrefAttr := "/img/favicon.svg"),
       // Include Unpoly before your own stylesheets and JavaScripts
       link(relAttr := "stylesheet", hrefAttr := "/css/unpoly.min.css"),
@@ -86,7 +86,7 @@ object Templates:
       span(
         classAttr := List("pure-menu-heading"),
         styleAttr := Seq("text-align" -> "center"),
-        "Raitis Kriķis photography",
+        titleText,
       ),
       // Right side of header
     ),

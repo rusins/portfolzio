@@ -3,8 +3,7 @@ package portfolzio.website
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.{Album, Image}
 import portfolzio.util.*
-import portfolzio.website.html.Pages.*
-import portfolzio.website.html.Templates.*
+import portfolzio.website.html.{Pages, Templates}
 import portfolzio.{AppStateManager, WebsiteConfig}
 import zio.*
 import zio.http.*
@@ -22,6 +21,11 @@ class Website(config: WebsiteConfig)(
   private val cssPath = Paths.get("css")
   private val jsPath = Paths.get("js")
   private val imgPath = Paths.get("img")
+
+  private val templates = Templates(config.title)
+  private val pages = Pages(config.title, showLicense = config.licenseFile.isDefined)
+  import templates.*
+  import pages.*
 
   private def streamResponse(stream: ZStream[Any, Throwable, Byte], mediaType: MediaType) =
     stream
@@ -146,4 +150,11 @@ class Website(config: WebsiteConfig)(
             fileResponse(filePath, MediaType.image.jpeg)
           else
             resourceResponse(imgPath.resolve("image-not-found.jpg"), MediaType.image.jpeg)
+        )
+
+      case Method.GET -> Root / "license" =>
+        config.licenseFile.fold(ZIO.succeed(Response(Status.NotFound)))(licenseFile =>
+          ZIO.readFile(licenseFile).map(licenseContents =>
+            Response.html(licensePage(licenseContents))
+          )
         )

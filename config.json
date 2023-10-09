@@ -1,5 +1,6 @@
 {
   "port": 8080,
+  "title": "Raitis Kriķis Photography",
   "data": {
     "directory": "/home/raitis/Pictures/Photos/Website",
     "minScanInterval": 6
@@ -7,5 +8,6 @@
   "previews": {
     "size": 2560,
     "quality": 0.7
-  }
+  },
+  "licenseFile": "LICENSE"
 }
