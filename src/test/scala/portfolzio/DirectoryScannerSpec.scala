@@ -54,7 +54,7 @@ object DirectoryScannerSpec extends ZIOSpecDefault:
         yield assert(entries)(contains(ExpectedImage)) && assert(entries)(contains(ExpectedAlbum))
     },
     test("monitoringProcess detects all changes within the data directory") {
-      val smallPause = ZIO.succeed(Thread.sleep(100L))
+      val smallPause = ZIO.succeed(Thread.sleep(500L))
       val tempDir = Files.createTempDirectory("data")
       for
         changeDetected <- Ref.make(false)

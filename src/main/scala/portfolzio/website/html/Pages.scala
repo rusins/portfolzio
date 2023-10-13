@@ -40,7 +40,7 @@ class Pages(titleText: String, showLicense: Boolean) {
     headerTemplate(main(
       div(
         classAttr := List("photo-box", "center"),
-        styleAttr := Seq("max-width" -> "80vh"),
+        styleAttr := Seq("max-width" -> "100%", "max-height" -> "75vh"),
         img(srcAttr := "/preview" + image.id),
       ),
       h1(

@@ -6,7 +6,6 @@ import portfolzio.model.AlbumEntry.*
 import portfolzio.util.Regex.DelimiterRegex
 import portfolzio.website.html.CustomAttributes.*
 import zio.http.html.*
-import zio.http.html.Attributes.PartialAttribute
 
 class Templates(titleText: String):
 

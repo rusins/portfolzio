@@ -62,7 +62,7 @@ class Website(config: WebsiteConfig)(
               imageGrid(
                 state.albumEntries.values.collect[Image] {
                   case img: Image => img
-                }.toList.sortBy(_.info.time).reverse.take(18)
+                }.toList.sortBy(_.info.time).reverse.take(12).sortBy(_ => Math.random())
               )
             )
           )
