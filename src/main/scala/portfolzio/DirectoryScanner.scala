@@ -1,7 +1,10 @@
 package portfolzio
 
+import org.apache.commons.imaging.common.ImageMetadata
+import org.apache.commons.imaging.{ImageReadException, Imaging}
 import portfolzio.model.AlbumEntry.IdSelector
 import portfolzio.model.{AlbumEntry, ImageInfo}
+import portfolzio.util.ExifHelpers.*
 import portfolzio.util.Regex.{AlbumRegex, ImageRegex, RawFileRegex}
 import portfolzio.util.{DaemonRunner, Regex, Utf8Checker}
 import zio.json.*
@@ -9,7 +12,7 @@ import zio.prelude.NonEmptyList
 import zio.process.CommandError
 import zio.{process, *}
 
-import java.io.{File, FileFilter, IOException}
+import java.io.{File, IOException}
 import java.nio.file.{Path, Paths}
 
 trait DirectoryScanner:
@@ -83,6 +86,7 @@ object DirectoryScanner:
       filesInDir.find(_.getName.contains("info.json") && pathPrefix != "/") match
         case None           => ZIO.succeed(None)
         case Some(infoFile) =>
+          val imageId = AlbumEntry.Id.unsafe(pathPrefix.stripSuffix("/"))
           for
             info <- ZIO
               .readFile(infoFile.getPath)
@@ -94,16 +98,34 @@ object DirectoryScanner:
               )
             imageFiles = filesInDir.filter(file => file.getName.matches(ImageRegex.regex) && file.isFile)
             rawFiles = filesInDir.filter(file => file.getName.matches(RawFileRegex.regex) && file.isFile)
-            image: Option[AlbumEntry.Image] = NonEmptyList
-              .fromIterableOption(imageFiles)
-              .map(imageFiles =>
-                AlbumEntry.Image(
-                  AlbumEntry.Id.unsafe(pathPrefix.stripSuffix("/")),
-                  info,
-                  imageFiles = imageFiles.map(file => Paths.get(pathPrefix.stripPrefix("/") + file.getName)),
-                  rawFiles = rawFiles.map(file => Paths.get(pathPrefix.stripPrefix("/") + file.getName)).toList,
+            image: Option[AlbumEntry.Image] <- NonEmptyList.fromIterableOption(imageFiles).fold(
+              ZIO.logWarning(s"No image files found for $imageId").as(None)
+            )(imageFilesUnsorted =>
+              val imageFilesSorted = NonEmptyList.fromIterableOption(imageFilesUnsorted
+                .map(file => info.primaryImageFile.contains(file.getName) -> file)
+                .sorted.reverse.map(_._2)).get
+              for
+                exifInfo: Option[ImageMetadata] <- ZIO.attemptBlockingIOUnsafe { _ =>
+                  try
+                    Right(Imaging.getMetadata(imageFiles.head))
+                  catch
+                    case e: ImageReadException => Left(e.getMessage)
+                }.flatMap {
+                  case Left(error)     => ZIO.logWarning(s"Failed to read Exif metadata for $imageId - $error").as(None)
+                  case Right(metadata) => ZIO.succeed(Some(metadata))
+                }
+                infoWithExif = exifInfo.fold(info)(metadata => info.populateWithExifMetadata(metadata))
+                image: AlbumEntry.Image = AlbumEntry.Image(
+                  imageId,
+                  infoWithExif,
+                  imageFiles = imageFilesSorted.map(file => Paths.get(pathPrefix.stripPrefix("/") + file.getName)),
+                  rawFiles =
+                    rawFiles.toList.sortBy(_.getName).reverse.map(file =>
+                      Paths.get(pathPrefix.stripPrefix("/") + file.getName)
+                    ),
                 )
-              )
+              yield Some(image)
+            )
           yield image
 
     def parseAlbum(pathPrefix: String, file: File): UIO[Option[AlbumEntry.Album]] =
@@ -150,7 +172,7 @@ object DirectoryScanner:
 
     val dir = new File(dataDirectory + pathPrefix)
     (for
-      filesInDir <- ZIO.attempt(dir.listFiles())
+      filesInDir <- ZIO.attempt(dir.listFiles().toIndexedSeq)
       subDirEntries <- searchInSubDirs(filesInDir)
       localImage <- tryToResolveImage(filesInDir)
       localAlbums <- resolveAlbums(filesInDir)

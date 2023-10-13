@@ -5,9 +5,8 @@ import portfolzio.util.*
 import zio.*
 import zio.process.Command
 
-import java.io.{File, IOException}
+import java.io.IOException
 import java.nio.file.{Files, Path, Paths}
-import scala.collection.immutable.HashMap
 
 trait PreviewGenerator:
   /** Trigger a background task to fetch all images from current app state and generate previews for images with them missing or outdated */
@@ -38,10 +37,14 @@ object PreviewGenerator:
         hashExists <- ZIO.attemptBlockingIO(Files.exists(hashPath))
         hashMatches <-
           ZIO.when(hashExists)(
-            Command("sha1sum", "-c", hashPath.toString).exitCode.flatMap {
-              case ExitCode.success => ZIO.succeed(true)
-              case ExitCode.failure => ZIO.log(s"Hash changed for ${ imagePath.toString }").as(false)
-            }
+            Command("sha1sum", "-c", hashPath.toString).run
+              .flatMap(p => p.exitCode.zip(p.stdout.string))
+              .flatMap { (exitCode, stdOut) =>
+                exitCode match {
+                  case ExitCode.success if stdOut.contains(imagePath.toString) => ZIO.succeed(true)
+                  case _                                                       => ZIO.log(s"Hash changed for ${ imagePath.toString }").as(false)
+                }
+              }
           ).map(_.getOrElse(false))
         _ <- ZIO.when(!previewExists || !hashMatches)(
           ZIO.attemptBlockingIO(Files.createDirectories(previewPath.getParent)) *>

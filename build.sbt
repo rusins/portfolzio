@@ -20,10 +20,20 @@ lazy val root = project
       "dev.zio" %% "zio-test-magnolia" % ZioVersion % Test,
       "dev.zio" %% "zio-json" % "0.6.2",
       "dev.zio" %% "zio-logging" % "2.1.14",
+      "org.apache.commons" % "commons-imaging" % "1.0-alpha3",
     ),
   )
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
+
+scalacOptions ++= Seq(
+  "-encoding",
+  "utf8",
+  "-feature",
+  "-unchecked",
+  "-Werror",
+  "-deprecation",
+)
 
 // https://stackoverflow.com/a/48173709
 assembly / assemblyMergeStrategy := {

@@ -3,7 +3,6 @@ package portfolzio
 import portfolzio.model.AlbumEntry.IdSelector
 import portfolzio.model.{AlbumEntry, ImageInfo}
 import zio.*
-import zio.logging.LogFilter
 import zio.prelude.NonEmptyList
 import zio.test.Assertion.*
 import zio.test.ZTestLogger.LogEntry
@@ -11,6 +10,7 @@ import zio.test.{test, *}
 
 import java.io.File
 import java.nio.file.{Files, Paths}
+import java.time.LocalDateTime
 
 object DirectoryScannerSpec extends ZIOSpecDefault:
 
@@ -34,7 +34,15 @@ object DirectoryScannerSpec extends ZIOSpecDefault:
     test("findAlbumEntries returns an image entry for and an album containing day-night") {
       val ExpectedImage = AlbumEntry.Image(
         AlbumEntry.Id.safe("day-night"),
-        ImageInfo(description = Some("A composite photo of my backyard")),
+        ImageInfo(
+          description = Some("A composite photo of my backyard"),
+          time = Some(LocalDateTime.of(2022, 12, 13, 19, 0, 19)),
+          cameraModel = Some("Sony a7 IV"),
+          aperture = Some("F1.4"),
+          focalLength = Some("50mm"),
+          shutterSpeed = Some("1/20s"),
+          iso = Some("ISO 12800"),
+        ),
         imageFiles = NonEmptyList(Paths.get("day-night/day-night.jpg")),
         rawFiles = List.empty,
       )

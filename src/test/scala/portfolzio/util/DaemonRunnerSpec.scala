@@ -1,15 +1,15 @@
 package portfolzio.util
 
-import zio._
-import zio.test.{test, _}
-import zio.test.Assertion._
+import zio.*
+import zio.test.Assertion.*
+import zio.test.{test, *}
 
 object DaemonRunnerSpec extends ZIOSpecDefault {
 
   // TODO: This test suite is nondeterministic because we sleep to assert behavior of forked fibers.
   //       I don't know what the idiomatic way of testing this would be in Zio.
   //       Using schedules with retries would be really ugly I think.
-  private val smallPause = ZIO.succeed(Thread.sleep(100L))
+  private val smallPause = ZIO.succeed(Thread.sleep(500L))
 
   override def spec = suite("DaemonRunnerSpec")(
     test("daemonRunner runs the task only once after being requested once") {
@@ -55,7 +55,7 @@ object DaemonRunnerSpec extends ZIOSpecDefault {
         _ <- smallPause
         assertion <- assertZIO(timesRun.get)(Assertion.equalTo(3))
       yield assertion
-    }
+    },
   )
 
 }

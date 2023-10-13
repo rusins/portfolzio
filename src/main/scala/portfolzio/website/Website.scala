@@ -7,11 +7,10 @@ import portfolzio.website.html.{Pages, Templates}
 import portfolzio.{AppStateManager, WebsiteConfig}
 import zio.*
 import zio.http.*
-import zio.http.Path.Segment
 import zio.http.html.Html
 import zio.stream.ZStream
 
-import java.io.IOException
+import java.nio.charset.StandardCharsets
 import java.nio.file.{Path, Paths}
 
 class Website(config: WebsiteConfig)(
@@ -47,7 +46,8 @@ class Website(config: WebsiteConfig)(
     streamResponse(ZStream.fromResource(filePath.toString), mediaType)
 
   private def albumEntryIdFromPath(path: zio.http.Path, index: Int) =
-    path.segments.drop(index).map(_.text).foldLeft("") { case (a, b) => s"$a/$b" }
+    val concatenatedId = path.segments.drop(index).map(_.text).foldLeft("") { case (a, b) => s"$a/$b" }
+    java.net.URLDecoder.decode(concatenatedId, StandardCharsets.UTF_8)
 
   object `/id`:
     def unapply(path: zio.http.Path): Option[(zio.http.Path, AlbumEntry.Id)] =
@@ -97,7 +97,7 @@ class Website(config: WebsiteConfig)(
         appStateManager.getState.map(state =>
           state.albumEntries.get(imageId) match
             case Some(image: Image) => Response.html(imagePage(image))
-            case _                  => Response.html(notFoundPage("Image not found"), Status.NotFound)
+            case _                  => Response.html(notFoundPage(s"Image $imageId not found"), Status.NotFound)
         )
 
       case Method.GET -> Root / "album" `/id` albumId =>
@@ -115,7 +115,7 @@ class Website(config: WebsiteConfig)(
 
       case Method.GET -> Root / "tag" / tag =>
         appStateManager.getState.map(state =>
-          Response.html(tagPage(state)(tag))
+          Response.html(tagPage(state)(java.net.URLDecoder.decode(tag, StandardCharsets.UTF_8)))
         )
 
       case Method.GET -> Root / "css" / file =>

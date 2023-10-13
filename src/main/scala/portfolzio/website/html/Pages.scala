@@ -4,7 +4,8 @@ import portfolzio.AppState
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.Image
 import zio.http.html.*
-import zio.http.html.Attributes.PartialAttribute
+
+import java.time.format.DateTimeFormatter
 
 class Pages(titleText: String, showLicense: Boolean) {
 
@@ -48,11 +49,15 @@ class Pages(titleText: String, showLicense: Boolean) {
       ),
       p(
         styleAttr := Seq("text-align" -> "center", "font-family" -> "'Raleway', sans-serif", "font-weight" -> "200"),
-        image.info.time.map(_.toString).getOrElse(""),
+        image.info.time.map(_.format(DateTimeFormatter.ofPattern("E, MMMM d. yyyy, HH:mm:ss"))).getOrElse(""),
         br(),
         image.info.focalLength.getOrElse(""),
         br(),
         image.info.aperture.getOrElse(""),
+        br(),
+        image.info.shutterSpeed.getOrElse(""),
+        br(),
+        image.info.iso.getOrElse(""),
         br(),
         image.info.cameraModel.getOrElse(""),
       ),
@@ -61,7 +66,7 @@ class Pages(titleText: String, showLicense: Boolean) {
         div(
           styleAttr := Seq("text-align" -> "center"),
           image.imageFiles.map(downloadPath =>
-            a(
+            div(a(
               styleAttr := Seq(
                 "font-family" -> "'Raleway', sans-serif",
                 "font-weight" -> "200",
@@ -71,13 +76,13 @@ class Pages(titleText: String, showLicense: Boolean) {
               hrefAttr := s"/download/${ downloadPath.toString }",
               downloadAttr := "Raitis_Krikis" + downloadPath.toString.replaceAll("/", "-"),
               "Download Photo",
-            )
+            ))
           ).toSeq,
         ),
         div(
           styleAttr := Seq("text-align" -> "center"),
           image.rawFiles.map(downloadPath =>
-            a(
+            div(a(
               styleAttr := Seq(
                 "font-family" -> "'Raleway', sans-serif",
                 "font-weight" -> "200",
@@ -87,7 +92,7 @@ class Pages(titleText: String, showLicense: Boolean) {
               hrefAttr := s"/download/${ downloadPath.toString }",
               downloadAttr := "Raitis_Krikis" + downloadPath.toString.replaceAll("/", "-"),
               "Download Raw File",
-            )
+            ))
           ).toSeq,
         ),
         if (showLicense) div(
