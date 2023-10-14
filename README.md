@@ -24,6 +24,7 @@ Lower-sized preview images are generated for the images using imagemagick.
 
 ## Dependencies
 
+- Use OpenJDK 11
 - inotifywatch, available from the `inotify-tools` package, for watching file system changes.
   If you have a photo library with more than 8192 photos, please increase the number of inotify watches
   the system allows to be made by writing to `/proc/sys/fs/inotify/max_user_watches`.
