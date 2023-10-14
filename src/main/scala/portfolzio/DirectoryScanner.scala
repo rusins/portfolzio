@@ -102,8 +102,9 @@ object DirectoryScanner:
               ZIO.logWarning(s"No image files found for $imageId").as(None)
             )(imageFilesUnsorted =>
               val imageFilesSorted = NonEmptyList.fromIterableOption(imageFilesUnsorted
-                .map(file => info.primaryImageFile.contains(file.getName) -> file)
-                .sorted.reverse.map(_._2)).get
+                // Sort by taking primary image file first, falling back on longest file name otherwise
+                .map(file => (info.primaryImageFile.contains(file.getName), file.getName.length, file))
+                .sorted.reverse.map(_._3)).get
               for
                 exifInfo: Option[ImageMetadata] <- ZIO.attemptBlockingIOUnsafe { _ =>
                   try
