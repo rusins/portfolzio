@@ -37,6 +37,10 @@ case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
         case Some(img: Image) => Some(img.id)
         case Some(alb: Album) => children.get(alb.id)
           .flatMap(_.headOption.flatMap(child => resolveCoverImage(child.id, visited + album)))
+
+  val tags: List[String] = albumEntries.collect {
+    case (_, img: Image) => img.info.tags.getOrElse(List.empty)
+  }.flatten.toSet.toList.sortBy(_.toLowerCase)
 }
 
 object AppState {

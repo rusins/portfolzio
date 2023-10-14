@@ -86,9 +86,7 @@ class Website(config: WebsiteConfig)(
         appStateManager.getState.map(state =>
           Response.html(
             tagsPage(
-              state.albumEntries.collect {
-                case (_, img: Image) => img.info.tags.getOrElse(List.empty)
-              }.flatten.toSet.toList.sorted
+              state.tags
             )
           )
         )
