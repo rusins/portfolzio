@@ -10,7 +10,7 @@ enum AlbumEntry(val id: Id):
   /** @param id directory path + album file name */
   case Album(
     override val id: Id,
-    children: List[IdSelector],
+    childSelectors: List[IdSelector],
   ) extends AlbumEntry(id)
 
   /** @param id         path of image's parent directory
@@ -56,9 +56,10 @@ object AlbumEntry:
   object IdSelector:
     def fromString(str: String): IdSelector = str
 
-  extension (selector: IdSelector)
-    def findMatches(basePath: String, from: List[Id]): List[Id] = {
-      val absoluteSelector = if (selector.startsWith("/")) selector else basePath + "/" + selector
+    /** Loops over selectors and items in order so that items matched by the first selector come up
+      * in the result first, but such that items don't appear more than once.
+      */
+    def findMatches(basePath: String)(selectors: Iterable[IdSelector], items: Iterable[Id]): List[Id] = {
 
       @tailrec
       def matches(query: List[String], candidate: List[String]): Boolean = (query, candidate) match
@@ -67,10 +68,22 @@ object AlbumEntry:
         case (q :: qtail, c :: ctail) if q == c => matches(qtail, ctail)
         case _                                  => false
 
-      from.filter(id =>
-        matches(
-          absoluteSelector.split("/").toList,
-          id.split("/").toList,
-        )
+      val queries = selectors.map(selector =>
+        val absoluteSelector = if (selector.startsWith("/")) selector else basePath.stripSuffix("/") + "/" + selector
+        absoluteSelector.split('/').toList
       )
+      val indexedItems = items.toIndexedSeq
+      val matched = Array.fill(indexedItems.length)(false)
+      var result = List.empty[Id]
+      for
+        query <- queries
+        i <- indexedItems.indices if !matched(i)
+        item = indexedItems(i)
+      yield
+        if (matches(query, item.split('/').toList)) {
+          matched(i) = true
+          result = item :: result
+        }
+      result.reverse
+
     }

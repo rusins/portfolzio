@@ -45,10 +45,10 @@ object ExifHelpers {
           .getOrElse(s"$make $model")
       )
       val exifAperture = items.get("FNumber").orElse(items.get("ApertureValue")).map { str =>
-        if (str.contains('('))
-          "F" + str.dropWhile(_ != '(').drop(1).takeWhile(_ != ')')
+        "F" + (if (str.contains('('))
+          str.dropWhile(_ != '(').drop(1).takeWhile(_ != ')')
         else
-          str
+          str)
       }
       val exifFocalLength = items.get("FocalLength").map { str =>
         (

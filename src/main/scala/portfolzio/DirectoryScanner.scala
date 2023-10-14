@@ -142,7 +142,7 @@ object DirectoryScanner:
                     AlbumEntry
                       .Album(
                         AlbumEntry.Id.safe(pathPrefix + file.getName.stripSuffix(".album")),
-                        children = fileContents.split('\n').map(IdSelector.fromString).toList,
+                        childSelectors = fileContents.split('\n').map(IdSelector.fromString).toList,
                       )
                   )
                 ),

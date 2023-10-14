@@ -48,7 +48,7 @@ object DirectoryScannerSpec extends ZIOSpecDefault:
       )
       val ExpectedAlbum = AlbumEntry.Album(
         AlbumEntry.Id.safe("random"),
-        children = List(IdSelector.fromString("day-night")),
+        childSelectors = List(IdSelector.fromString("day-night"), IdSelector.fromString("/something/*")),
       )
       for entries <- DirectoryScanner.findAlbumEntries(DataDir)
         yield assert(entries)(contains(ExpectedImage)) && assert(entries)(contains(ExpectedAlbum))

@@ -128,7 +128,7 @@ class Templates(titleText: String):
         classAttr := List("center"),
         styleAttr := Seq("max-width" -> MaxWidth),
         div(
-          albums.zipWithIndex.map { case (album, index) =>
+          albums.sortBy(_.name).zipWithIndex.map { case (album, index) =>
             val coverId = state.resolveCoverImage(album.id)
 
             def imagePart(align: "left" | "right") = div(
@@ -187,6 +187,6 @@ class Templates(titleText: String):
       div(
         classAttr := List("center"),
         styleAttr := Seq("max-width" -> MaxWidth),
-        photoBoxes(images),
+        photoBoxes(images.sortBy(_.info.time)),
       ),
     )

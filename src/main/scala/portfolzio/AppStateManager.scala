@@ -16,12 +16,14 @@ case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
     val hasParents = mutable.HashMap[AlbumEntry.Id, Boolean]()
     val childMap = mutable.HashMap[AlbumEntry.Id, List[AlbumEntry]]()
     albumEntries.values.collect {
-      case Album(id, children) => children.foreach(selector =>
-        val parentPath = id.value.reverse.dropWhile(_ != '/').drop(1).reverse
-        val resolvedChildren = selector.findMatches(parentPath, albumEntries.keys.toList)
-        resolvedChildren.foreach(child => hasParents.addOne(child, true))
-        childMap.addOne(id, resolvedChildren.flatMap(albumEntries.get))
-      )
+      case Album(albumId, childSelectors) =>
+        val parentPath = albumId.value.reverse.dropWhile(_ != '/').drop(1).reverse
+        var children = IdSelector.findMatches(parentPath)(childSelectors, albumEntries.keys)
+          .filterNot(_ == albumId)
+        children.foreach(child => hasParents.addOne(child, true))
+        val resolvedChildren = children.flatMap(albumEntries.get)
+        if (resolvedChildren.nonEmpty)
+          childMap.addOne(albumId, resolvedChildren)
     }
     val orphans = albumEntries.values.filter(entry => !hasParents.getOrElse(entry.id, false)).toSet
     (childMap.toMap, orphans)
