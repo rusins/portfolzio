@@ -85,7 +85,12 @@ class Templates(titleText: String):
       span(
         classAttr := List("pure-menu-heading"),
         styleAttr := Seq("text-align" -> "center"),
-        titleText,
+        a(
+          hrefAttr := "/",
+          classAttr := List("pure-menu-link"),
+          styleAttr := Seq("display" -> "inline"),
+          titleText,
+        ),
       ),
       // Right side of header
     ),

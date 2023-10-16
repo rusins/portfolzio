@@ -29,6 +29,10 @@ case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
     (childMap.toMap, orphans)
   }
 
+  def bestAlbum: Option[AlbumEntry.Album] = albumEntries.values.collectFirst {
+    case alb @ Album(AlbumEntry.Id("/best"), _) => alb
+  }
+
   def resolveCoverImage(album: AlbumEntry.Id, visited: Set[AlbumEntry.Id] = Set.empty): Option[AlbumEntry.Id] =
     if (visited.contains(album)) None
     else

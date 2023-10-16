@@ -44,6 +44,7 @@ object AlbumEntry:
   object Id:
     def safe(input: String): Id = "/" + input.dropWhile(_ == '/').reverse.dropWhile(_ == '/').reverse
     def unsafe(input: String): Id = input
+    def unapply(id: Id): Option[String] = Some(id.value)
 
   extension (id: Id)
     def value: String = id

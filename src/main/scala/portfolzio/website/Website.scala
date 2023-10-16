@@ -55,7 +55,25 @@ class Website(config: WebsiteConfig)(
 
   val app: Http[Any, Throwable, Request, Response] =
     Http.collectZIO[Request]:
-      case Method.GET -> Root | Method.GET -> Root / "recent" =>
+      case Method.GET -> Root =>
+        appStateManager.getState.map(state =>
+          Response.html(
+            pageWithNavigation(imageGrid(
+              state.bestAlbum.flatMap(bestAlbum => state.children.get(bestAlbum.id)).fold(
+                // Take 12 random photos from the entire collection
+                state.albumEntries.values.collect[Image] {
+                  case img: Image => img
+                }.toList.sortBy(_ => Math.random()).take(12)
+              )(bestAlbumEntries =>
+                bestAlbumEntries.collect[Image] {
+                  case img: Image => img
+                }
+              )
+            ))
+          )
+        )
+
+      case Method.GET -> Root / "recent" =>
         appStateManager.getState.map(state =>
           Response.html(
             pageWithNavigation(
