@@ -34,6 +34,7 @@ class Website(config: WebsiteConfig)(
           headers = Headers(
             Header.ContentType(mediaType),
             Header.ContentDisposition.attachment,
+            Header.CacheControl.MaxAge(7 * 24 * 60 * 60), // Cache for 1 week
           ),
           body = Body.fromChunk(chunk),
         )

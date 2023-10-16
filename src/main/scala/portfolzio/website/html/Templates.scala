@@ -88,6 +88,7 @@ class Templates(titleText: String):
         a(
           hrefAttr := "/",
           classAttr := List("pure-menu-link"),
+          upFollowAttr,
           styleAttr := Seq("display" -> "inline"),
           titleText,
         ),
