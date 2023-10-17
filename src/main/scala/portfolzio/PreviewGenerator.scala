@@ -30,7 +30,7 @@ object PreviewGenerator:
 
     def generatePreviewFor(image: Image): Task[Unit] = {
       val imagePath = dataDir.resolve(image.imageFiles.head)
-      val previewPath = root.resolve(image.id.relativePath)
+      val previewPath = root.resolve(image.id.relativePath.toString + ".jpg")
       val hashPath = root.resolve(image.id.relativePath.toString + ".sha1")
       (for
         previewExists <- ZIO.attemptBlockingIO(Files.exists(previewPath))
@@ -61,7 +61,7 @@ object PreviewGenerator:
             ).requireSuccessLogErrors *>
             ZIO.log(s"Generated preview image for $imagePath")
         )
-      yield ()).catchAll(e => ZIO.logError(e.getMessage))
+      yield ()).catchAll(e => ZIO.logError(e.toString))
     }
 
     for

@@ -110,7 +110,7 @@ object DirectoryScanner:
                   try
                     Right(Imaging.getMetadata(imageFiles.head))
                   catch
-                    case e: ImageReadException => Left(e.getMessage)
+                    case e: ImageReadException => Left(e.toString)
                 }.flatMap {
                   case Left(error)     => ZIO.logWarning(s"Failed to read Exif metadata for $imageId - $error").as(None)
                   case Right(metadata) => ZIO.succeed(Some(metadata))
@@ -149,7 +149,7 @@ object DirectoryScanner:
                 ),
               )
         }
-        .catchAll((e: IOException) => ZIO.logError(s"Failed to open file ${ file.getPath } - ${ e.getMessage }").as(None))
+        .catchAll((e: IOException) => ZIO.logError(s"Failed to open file ${ file.getPath } - ${ e.toString }").as(None))
 
     def resolveAlbums(filesInDir: Seq[File]): UIO[List[AlbumEntry]] =
       ZIO
@@ -179,7 +179,7 @@ object DirectoryScanner:
       localAlbums <- resolveAlbums(filesInDir)
     yield localImage.toList ++ localAlbums ++ subDirEntries).catchAll(t =>
       ZIO
-        .logWarning(s"WARN: Failed to scan directory ${ dir.getPath } - ${ t.getMessage }")
+        .logWarning(s"WARN: Failed to scan directory ${ dir.getPath } - ${ t.toString }")
         .map(_ => List.empty[AlbumEntry])
     )
   end findAlbumEntries

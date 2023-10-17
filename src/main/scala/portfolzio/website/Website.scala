@@ -38,7 +38,7 @@ class Website(config: WebsiteConfig)(
           ),
           body = Body.fromChunk(chunk),
         )
-      ).tapError(e => ZIO.logError(e.getMessage))
+      ).tapError(e => ZIO.logError(e.toString))
 
   private def fileResponse(filePath: Path, mediaType: MediaType) =
     streamResponse(ZStream.fromFile(filePath.toFile), mediaType)
@@ -159,7 +159,7 @@ class Website(config: WebsiteConfig)(
         )
 
       case Method.GET -> Root / "preview" `/id` imageId =>
-        val p = previewPath.safeResolve(Paths.get(imageId.value.stripPrefix("/")))
+        val p = previewPath.safeResolve(Paths.get(imageId.value.stripPrefix("/") + ".jpg"))
         p.fold(
           ZIO.succeed(Response(Status.Forbidden))
         )(filePath =>

@@ -5,10 +5,10 @@ import portfolzio.website.Website
 import zio.config.typesafe.TypesafeConfigProvider
 import zio.http.Server
 import zio.logging.consoleLogger
-import zio.{Console, Runtime, Scope, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
+import zio.{Runtime, ZIO, ZIOAppArgs, ZIOAppDefault, ZLayer}
 
 import java.io.IOException
-import java.nio.file.{Path, Paths}
+import java.nio.file.Paths
 
 //noinspection TypeAnnotation
 object Main extends ZIOAppDefault:
@@ -30,14 +30,14 @@ object Main extends ZIOAppDefault:
           )
       rawConfig <- ZIO
         .readFile(configFileName)
-        .mapError(ioErr => new IOException(s"Unable to load config file: ${ ioErr.getMessage }"))
+        .mapError(ioErr => new IOException(s"Unable to load config file: ${ ioErr.toString }"))
       config <- TypesafeConfigProvider
         .fromHoconString(rawConfig)
         .load(websiteConfig)
     yield config
 
   def run = getConfig.foldZIO(
-    failure => ZIO.logError(failure.getMessage),
+    failure => ZIO.logError("Failed to read config file - " + failure.toString),
     config =>
       for
         _ <- ZIO.log(
