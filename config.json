@@ -1,6 +1,7 @@
 {
   "port": 8080,
-  "title": "Raitis Kriķis Photography",
+  "title": "localhost Photography",
+  "url": "http://localhost:8080",
   "data": {
     "directory": "/home/raitis/Pictures/Photos/Website",
     "minScanInterval": 6

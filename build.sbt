@@ -33,6 +33,7 @@ scalacOptions ++= Seq(
   "-unchecked",
   "-Werror",
   "-deprecation",
+  "-language:implicitConversions",
 )
 
 // https://stackoverflow.com/a/48173709

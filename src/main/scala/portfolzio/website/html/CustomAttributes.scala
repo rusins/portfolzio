@@ -5,6 +5,9 @@ import zio.http.html.{Dom, Html}
 
 object CustomAttributes {
 
+  // For open graph meta tag
+  val propertyAttr: PartialAttribute[String] = PartialAttribute("property")
+
   // Unpoly attributes
   val upFollowAttr: Dom = Dom.attr("up-follow", "")
   val upInstantAttr: Dom = Dom.attr("up-instant", "")

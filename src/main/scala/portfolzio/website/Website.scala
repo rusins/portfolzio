@@ -3,6 +3,7 @@ package portfolzio.website
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.{Album, Image}
 import portfolzio.util.*
+import portfolzio.website.html.CustomTags.OGTags
 import portfolzio.website.html.{Pages, Templates}
 import portfolzio.{AppStateManager, WebsiteConfig}
 import zio.*
@@ -21,8 +22,8 @@ class Website(config: WebsiteConfig)(
   private val jsPath = Paths.get("js")
   private val imgPath = Paths.get("img")
 
-  private val templates = Templates(config.title)
-  private val pages = Pages(config.title, showLicense = config.licenseFile.isDefined)
+  private val templates = Templates(titleText = config.title, rootUrl = config.url)
+  private val pages = Pages(titleText = config.title, showLicense = config.licenseFile.isDefined, rootUrl = config.url)
   import templates.*
   import pages.*
 
@@ -59,7 +60,19 @@ class Website(config: WebsiteConfig)(
       case Method.GET -> Root =>
         appStateManager.getState.map(state =>
           Response.html(
-            pageWithNavigation(imageGrid(
+            pageWithNavigation(config.url.map(rootUrl =>
+              val bestPic =
+                for
+                  bestAlbum <- state.bestAlbum
+                  children <- state.children.get(bestAlbum.id)
+                  child <- children.headOption
+                yield child.id
+              OGTags(
+                title = config.title,
+                staticUrl = rootUrl,
+                imageUrl = rootUrl + "/preview" + bestPic.getOrElse("unknown"),
+              )
+            ))(imageGrid(
               state.bestAlbum.flatMap(bestAlbum => state.children.get(bestAlbum.id)).fold(
                 // Take 12 random photos from the entire collection
                 state.albumEntries.values.collect[Image] {
@@ -77,7 +90,7 @@ class Website(config: WebsiteConfig)(
       case Method.GET -> Root / "recent" =>
         appStateManager.getState.map(state =>
           Response.html(
-            pageWithNavigation(
+            pageWithNavigation()(
               imageGrid(
                 state.albumEntries.values.collect[Image] {
                   case img: Image => img
@@ -90,7 +103,7 @@ class Website(config: WebsiteConfig)(
       case Method.GET -> Root / "albums" =>
         appStateManager.getState.map(state =>
           Response.html(
-            pageWithNavigation(
+            pageWithNavigation()(
               albumView(state)(
                 rootAlbum = None,
                 state.orphans.collect[Album] {
@@ -122,10 +135,19 @@ class Website(config: WebsiteConfig)(
           val (status: Status, content: Html) = state.albumEntries.get(albumId) match
             case Some(album: Album) => state.children.get(album.id) match {
               case None           =>
-                Status.NotFound -> pageWithNavigation(html.h1(s"Album entries for $albumId not found! D:"))
-              case Some(children) => Status.Ok -> pageWithNavigation(albumView(state)(Some(album), children))
+                Status.NotFound -> pageWithNavigation()(
+                  html.h1(s"Album entries for $albumId not found! D:")
+                )
+              case Some(children) =>
+                Status.Ok -> pageWithNavigation(config.url.map(rootUrl =>
+                  OGTags(
+                    title = album.name + " | " + config.title,
+                    staticUrl = rootUrl + "/album" + albumId,
+                    imageUrl = rootUrl + "/preview" + children.headOption.map(_.id).getOrElse("unknown"),
+                  )
+                ))(albumView(state)(Some(album), children))
             }
-            case _                  => Status.NotFound -> pageWithNavigation(html.h1(s"Album $albumId not found! D:"))
+            case _                  => Status.NotFound -> pageWithNavigation()(html.h1(s"Album $albumId not found! D:"))
 
           Response.html(content, status)
         )

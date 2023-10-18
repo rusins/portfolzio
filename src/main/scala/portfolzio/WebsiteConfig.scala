@@ -6,11 +6,13 @@ import zio.config.magnolia.*
 
 /** @param port        network port for the webserver to listen to requests from
   * @param title       website title displayed on the website
+  * @param url         website domain, used for the URL in open graph
   * @param licenseFile optional path to a license file for the images hosted on the website
   */
 case class WebsiteConfig(
   port: Int,
   title: String = "",
+  url: Option[String],
   data: DirectoryScannerConfig,
   previews: PreviewConfig,
   licenseFile: Option[String],

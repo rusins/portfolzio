@@ -3,16 +3,17 @@ package portfolzio.website.html
 import portfolzio.AppState
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.Image
+import portfolzio.website.html.CustomTags.OGTags
 import zio.http.html.*
 
 import java.time.format.DateTimeFormatter
 
-class Pages(titleText: String, showLicense: Boolean) {
+class Pages(titleText: String, rootUrl: Option[String], showLicense: Boolean) {
 
-  private val templates = Templates(titleText)
+  private val templates = Templates(titleText, rootUrl)
   import templates.*
 
-  def tagsPage(tags: List[String]): Html = pageWithNavigation(
+  def tagsPage(tags: List[String]): Html = pageWithNavigation()(
     div(
       classAttr := List("pure-menu"),
       ul(
@@ -27,7 +28,7 @@ class Pages(titleText: String, showLicense: Boolean) {
     )
   )
 
-  def tagPage(state: AppState)(tag: String): Html = pageWithNavigation(
+  def tagPage(state: AppState)(tag: String): Html = pageWithNavigation()(
     centeredTopText(s"Images tagged: $tag"),
     imageGrid(
       state.albumEntries.values.collect {
@@ -37,7 +38,14 @@ class Pages(titleText: String, showLicense: Boolean) {
   )
 
   def imagePage(image: Image): Html = {
-    headerTemplate(main(
+    headerTemplate(rootUrl.map(rootUrl =>
+      OGTags(
+        title = image.id.lastPart + " | " + titleText,
+        staticUrl = rootUrl + "/image" + image.id,
+        imageUrl = rootUrl + "/preview" + image.id,
+        description = image.info.description,
+      )
+    ))(main(
       div(
         classAttr := List("photo-box", "center"),
         styleAttr := Seq("max-width" -> "100%", "max-height" -> "75vh"),
@@ -116,7 +124,7 @@ class Pages(titleText: String, showLicense: Boolean) {
     ))
   }
 
-  def licensePage(licenseContents: String): Html = pageWithNavigation(
+  def licensePage(licenseContents: String): Html = pageWithNavigation()(
     div(
       styleAttr := Seq(
         "text-align" -> "center",
@@ -133,5 +141,6 @@ class Pages(titleText: String, showLicense: Boolean) {
     ),
   )
 
-  def notFoundPage(message: String): Html = headerTemplate(h1(styleAttr := Seq("text-align" -> "center"), message))
+  def notFoundPage(message: String): Html =
+    headerTemplate(ogTags = None)(h1(styleAttr := Seq("text-align" -> "center"), message))
 }

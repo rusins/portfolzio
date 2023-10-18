@@ -5,19 +5,22 @@ import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.*
 import portfolzio.util.Regex.DelimiterRegex
 import portfolzio.website.html.CustomAttributes.*
+import portfolzio.website.html.CustomTags.OGTags
 import zio.http.html.*
 
-class Templates(titleText: String):
+class Templates(titleText: String, rootUrl: Option[String]):
 
   def altTextFromId(imageId: AlbumEntry.Id): Html =
     val text = "An image of " + imageId.lastPart.replaceAll(DelimiterRegex.regex, " ") + "."
     altAttr := text
 
-  def headerTemplate(bodyContent: Html*): Html = html(
+  def headerTemplate(ogTags: Option[OGTags])(bodyContent: Html*): Html = html(
     head(
       meta(charsetAttr := "utf-8"),
       meta(nameAttr := "viewport", contentAttr := "width=device-width, initial-scale=1.0"),
       title(titleText),
+      meta(nameAttr := "description", contentAttr := ogTags.flatMap(_.description).getOrElse("")),
+      ogTags.map(_.tags),
       link(relAttr := "icon", hrefAttr := "/img/favicon.svg"),
       // Include Unpoly before your own stylesheets and JavaScripts
       link(relAttr := "stylesheet", hrefAttr := "/css/unpoly.min.css"),
@@ -31,7 +34,7 @@ class Templates(titleText: String):
     body(bodyContent *),
   )
 
-  def pageWithNavigation(content: Html*): Html = headerTemplate(
+  def pageWithNavigation(ogTags: Option[OGTags] = None)(content: Html*): Html = headerTemplate(ogTags)(
     header(
       // Left side of header
       div(
