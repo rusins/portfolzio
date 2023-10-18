@@ -10,6 +10,8 @@ object CustomAttributes {
 
   // Unpoly attributes
   val upFollowAttr: Dom = Dom.attr("up-follow", "")
+  val upIgnoreHistoryAttr: Dom = Dom.attr("up-history", "false")
+  val upDontCacheAttr: Dom = Dom.attr("up-cache", "false")
   val upInstantAttr: Dom = Dom.attr("up-instant", "")
   val upPreloadAttr: Dom = Dom.attr("up-preload", "")
 

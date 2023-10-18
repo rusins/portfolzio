@@ -75,9 +75,7 @@ class Website(config: WebsiteConfig)(
             ))(imageGrid(
               state.bestAlbum.flatMap(bestAlbum => state.children.get(bestAlbum.id)).fold(
                 // Take 12 random photos from the entire collection
-                state.albumEntries.values.collect[Image] {
-                  case img: Image => img
-                }.toList.sortBy(_ => Math.random()).take(12)
+                state.images.sortBy(_ => Math.random()).take(12)
               )(bestAlbumEntries =>
                 bestAlbumEntries.collect[Image] {
                   case img: Image => img
@@ -87,14 +85,23 @@ class Website(config: WebsiteConfig)(
           )
         )
 
+      case Method.GET -> Root / "random" =>
+        appStateManager.getState.map(state =>
+          Response.html(
+            pageWithNavigation()(
+              imageGrid(
+                state.images.sortBy(_ => Math.random()).take(12)
+              )
+            )
+          )
+        )
+
       case Method.GET -> Root / "recent" =>
         appStateManager.getState.map(state =>
           Response.html(
             pageWithNavigation()(
               imageGrid(
-                state.albumEntries.values.collect[Image] {
-                  case img: Image => img
-                }.toList.sortBy(_.info.time).reverse.take(12).sortBy(_ => Math.random())
+                state.images.sortBy(_.info.time).reverse.take(12).sortBy(_ => Math.random())
               )
             )
           )

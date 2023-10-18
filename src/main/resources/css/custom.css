@@ -47,7 +47,7 @@ header {
 }
 
 /* Hide horizontal menu and show menu button on smaller screens */
-@media (max-width: 48em) {
+@media (max-width: 60em) {
   #menuToggle, #closeMenu {
     display: block; /* Show menu button */
   }

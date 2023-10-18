@@ -1,27 +1,11 @@
 package portfolzio
 
-import portfolzio.model.AlbumEntry.IdSelector
-import portfolzio.model.{AlbumEntry, ImageInfo}
+import portfolzio.model.AlbumEntry
 import zio.Scope
-import zio.prelude.NonEmptyList
 import zio.test.Assertion.*
 import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, test, *}
 
-import java.nio.file.Paths
-
 object AppStateSpec extends ZIOSpecDefault {
-
-  def img(id: String) = AlbumEntry.Image(
-    AlbumEntry.Id.unsafe(id),
-    ImageInfo(),
-    imageFiles = NonEmptyList(Paths.get("/")),
-    rawFiles = List.empty,
-  )
-
-  def album(id: String, children: List[String]) = AlbumEntry.Album(
-    AlbumEntry.Id.unsafe(id),
-    children.map(IdSelector.fromString),
-  )
 
   override def spec: Spec[TestEnvironment with Scope, Any] = suite("AppStateSpec")(
     test("AppState correctly identifies orphans and builds the child tree") {

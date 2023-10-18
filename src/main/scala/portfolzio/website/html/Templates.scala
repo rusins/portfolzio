@@ -7,6 +7,7 @@ import portfolzio.util.Regex.DelimiterRegex
 import portfolzio.website.html.CustomAttributes.*
 import portfolzio.website.html.CustomTags.OGTags
 import zio.http.html.*
+import zio.prelude.EqualOps
 
 class Templates(titleText: String, rootUrl: Option[String]):
 
@@ -82,6 +83,17 @@ class Templates(titleText: String, rootUrl: Option[String]):
               "Tags",
             ),
           ),
+          li(
+            classAttr := List("pure-menu-item"),
+            a(
+              classAttr := List("pure-menu-link"),
+              upPreloadAttr,
+              upDontCacheAttr,
+              hrefAttr := "/random",
+              onClickAttr := "toggleMenu()",
+              "Random",
+            ),
+          ),
         ),
       ),
       // Middle of header
@@ -108,6 +120,7 @@ class Templates(titleText: String, rootUrl: Option[String]):
         a(
           hrefAttr := "/image" + image.id,
           upLayerNewAttr,
+          upIgnoreHistoryAttr,
           upSizeAttr := "large",
           img(srcAttr := "/preview" + image.id, altTextFromId(image.id)),
         ),
@@ -177,7 +190,7 @@ class Templates(titleText: String, rootUrl: Option[String]):
                 "text-decoration" -> "none",
               ),
               hrefAttr := "/album" + album.id,
-              if (index % 2 == 0)
+              if (index % 2 === 0)
                 div(
                   containerStyles,
                   imagePart(align = "left"),

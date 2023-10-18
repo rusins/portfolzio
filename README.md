@@ -17,7 +17,7 @@ Inside that directory you should have:
 Inside any directory you can create text files ending with `.album` which behave as albums. The name of the file
 (before .`album`) is the album's ID, and in that text file you can reference images or other albums by their ID
 (or relative ID) as a newline separated list. You can use the `*` character to match all images or albums in a
-directory.
+directory. You can also match tags with `tag:example`.
 
 The server observes the directory for changes and refreshes periodically to reflect those changes.
 Lower-sized preview images are generated for the images using imagemagick.

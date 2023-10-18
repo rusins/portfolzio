@@ -3,6 +3,7 @@ package portfolzio
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.*
 import zio.*
+import zio.prelude.EqualOps
 
 import scala.collection.immutable.HashMap
 import scala.collection.mutable
@@ -18,12 +19,11 @@ case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
     albumEntries.values.collect {
       case Album(albumId, childSelectors) =>
         val parentPath = albumId.value.reverse.dropWhile(_ != '/').drop(1).reverse
-        var children = IdSelector.findMatches(parentPath)(childSelectors, albumEntries.keys)
-          .filterNot(_ == albumId)
-        children.foreach(child => hasParents.addOne(child, true))
-        val resolvedChildren = children.flatMap(albumEntries.get)
-        if (resolvedChildren.nonEmpty)
-          childMap.addOne(albumId, resolvedChildren)
+        var children = IdSelector.findMatches(parentPath)(childSelectors, albumEntries.values)
+          .filterNot(_.id === albumId)
+        children.foreach(child => hasParents.addOne(child.id, true))
+        if (children.nonEmpty)
+          childMap.addOne(albumId, children)
     }
     val orphans = albumEntries.values.filter(entry => !hasParents.getOrElse(entry.id, false)).toSet
     (childMap.toMap, orphans)
@@ -31,6 +31,7 @@ case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
 
   def bestAlbum: Option[AlbumEntry.Album] = albumEntries.values.collectFirst {
     case alb @ Album(AlbumEntry.Id("/best"), _) => alb
+    case alb @ Album(AlbumEntry.Id("/Best"), _) => alb
   }
 
   def resolveCoverImage(album: AlbumEntry.Id, visited: Set[AlbumEntry.Id] = Set.empty): Option[AlbumEntry.Id] =
@@ -45,6 +46,10 @@ case class AppState(albumEntries: HashMap[AlbumEntry.Id, AlbumEntry]) {
   val tags: List[String] = albumEntries.collect {
     case (_, img: Image) => img.info.tags.getOrElse(List.empty)
   }.flatten.toSet.toList.sortBy(_.toLowerCase)
+
+  val images: List[Image] = albumEntries.values.collect {
+    case img: Image => img
+  }.toList
 }
 
 object AppState {

@@ -3,6 +3,7 @@ package portfolzio.util
 import org.apache.commons.imaging.common.ImageMetadata
 import portfolzio.model.ImageInfo
 import portfolzio.util.RomanNumerals.digitToRoman
+import zio.prelude.EqualOps
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -39,21 +40,21 @@ object ExifHelpers {
       ).toMap[String, String]
       val exifTime = items.get("DateTimeOriginal").flatMap(parseExifDateTime)
       val exifCamera = items.get("Make").zip(items.get("Model")).map((exifMake, exifModel) =>
-        val make = exifMake.filterNot(_ == '\'')
-        val model = exifModel.filterNot(_ == '\'')
-        Option.when(make == "SONY")(parseSonyModel(model)).flatten
+        val make = exifMake.filterNot(_ === '\'')
+        val model = exifModel.filterNot(_ === '\'')
+        Option.when(make === "SONY")(parseSonyModel(model)).flatten
           .getOrElse(s"$make $model")
       )
       val exifAperture = items.get("FNumber").orElse(items.get("ApertureValue")).map { str =>
         "F" + (if (str.contains('('))
-          str.dropWhile(_ != '(').drop(1).takeWhile(_ != ')')
+          str.dropWhile(_ !== '(').drop(1).takeWhile(_ !== ')')
         else
           str)
       }
       val exifFocalLength = items.get("FocalLength").map { str =>
         (
           if (str.contains('('))
-            str.dropWhile(_ != '(').drop(1).takeWhile(_ != ')')
+            str.dropWhile(_ !== '(').drop(1).takeWhile(_ !== ')')
           else
             str
           ) + "mm"
@@ -61,7 +62,7 @@ object ExifHelpers {
       val exifShutterSpeed = items.get("ExposureTime").orElse(items.get("ShutterSpeedValue")).map { speedStr =>
         (
           if (speedStr.contains('('))
-            speedStr.takeWhile(c => c != ' ' && c != '(')
+            speedStr.takeWhile(c => (c !== ' ') && (c !== '('))
           else
             speedStr
           ) + "s"
