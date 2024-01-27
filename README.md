@@ -45,3 +45,24 @@ Lower-sized preview images are generated for the images using imagemagick.
 
 There is a `portfolzio.service` systemd service file available for copy-pasting into `/etc/systemd/system` to start
 the app that way. Use a dedicated webserver like Caddy for HTTPS support.
+
+## info.json example
+
+All fields are optional, and can be omitted.
+
+```json
+{
+  "description": "",
+  "tags": [
+    "",
+    ""
+  ],
+  "primaryImageFile": "",
+  "time": "2024-01-27T18:20:54",
+  "cameraModel": "Sony a7 IV",
+  "aperture": "F2.8",
+  "focalLength": "300mm",
+  "shutterSpeed": "1/60s",
+  "iso": "ISO 100"
+}
+```
