@@ -1,6 +1,6 @@
 # Portfolzio
 
-My photography portfolio portfolzio.website. Written in Scala with ZIO. See it in action:
+My photography portfolio website. Written in Scala with ZIO. See it in action:
 [raitis.krikis.id.lv](https://raitis.krikis.id.lv)
 
 ## How it works
