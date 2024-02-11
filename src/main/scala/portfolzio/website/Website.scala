@@ -204,3 +204,6 @@ class Website(config: WebsiteConfig)(
             Response.html(licensePage(licenseContents))
           )
         )
+
+      case Method.GET -> Root / "robots.txt" =>
+        resourceResponse(Paths.get("robots.txt"), MediaType.text.plain)
