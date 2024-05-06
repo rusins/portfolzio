@@ -209,7 +209,9 @@ class Website(config: WebsiteConfig)(
         )
 
       case Method.GET -> Root / "robots.txt" =>
-        resourceResponse(Paths.get("robots.txt"), MediaType.text.plain)
+        config.url match
+          case None          => ZIO.succeed(notFoundResponse("Unable to generate robots.txt. Missing URL in config file."))
+          case Some(baseUrl) => ZIO.succeed(Response.text(s"Sitemap: $baseUrl/sitemap.xml"))
 
       case Method.GET -> Root / "sitemap.xml" =>
         config.url match
