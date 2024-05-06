@@ -16,6 +16,7 @@ class Templates(titleText: String, rootUrl: Option[String]):
     altAttr := text
 
   def headerTemplate(ogTags: Option[OGTags])(bodyContent: Html*): Html = html(
+    langAttr := "en",
     head(
       meta(charsetAttr := "utf-8"),
       meta(nameAttr := "viewport", contentAttr := "width=device-width, initial-scale=1.0"),

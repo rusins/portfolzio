@@ -49,7 +49,7 @@ class Pages(titleText: String, rootUrl: Option[String], showLicense: Boolean) {
       div(
         classAttr := List("photo-box", "center"),
         styleAttr := Seq("max-width" -> "100%", "max-height" -> "75vh"),
-        img(srcAttr := "/preview" + image.id),
+        img(srcAttr := "/preview" + image.id, altTextFromId(image.id)),
       ),
       h1(
         styleAttr := Seq("text-align" -> "center", "font-family" -> "'Raleway', sans-serif", "font-weight" -> "500"),

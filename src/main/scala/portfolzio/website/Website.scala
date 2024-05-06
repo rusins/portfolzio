@@ -3,6 +3,7 @@ package portfolzio.website
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.{Album, Image}
 import portfolzio.util.*
+import portfolzio.website.SiteMap.genSiteMap
 import portfolzio.website.html.CustomTags.OGTags
 import portfolzio.website.html.{Pages, Templates}
 import portfolzio.{AppStateManager, WebsiteConfig}
@@ -26,6 +27,8 @@ class Website(config: WebsiteConfig)(
   private val pages = Pages(titleText = config.title, showLicense = config.licenseFile.isDefined, rootUrl = config.url)
   import templates.*
   import pages.*
+
+  private def notFoundResponse(text: String) = Response.html(notFoundPage(text), Status.NotFound)
 
   private def streamResponse(stream: ZStream[Any, Throwable, Byte], mediaType: MediaType) =
     stream
@@ -134,7 +137,7 @@ class Website(config: WebsiteConfig)(
         appStateManager.getState.map(state =>
           state.albumEntries.get(imageId) match
             case Some(image: Image) => Response.html(imagePage(image))
-            case _                  => Response.html(notFoundPage(s"Image $imageId not found"), Status.NotFound)
+            case _ => notFoundResponse(s"Image $imageId not found")
         )
 
       case Method.GET -> Root / "album" `/id` albumId =>
@@ -207,3 +210,10 @@ class Website(config: WebsiteConfig)(
 
       case Method.GET -> Root / "robots.txt" =>
         resourceResponse(Paths.get("robots.txt"), MediaType.text.plain)
+
+      case Method.GET -> Root / "sitemap.xml" =>
+        config.url match
+          case None          => ZIO.succeed(notFoundResponse("Unable to generate sitemap. Missing URL in config file."))
+          case Some(baseUrl) => appStateManager.getState.map(state =>
+            Response.text(genSiteMap(baseUrl)(state))
+          )
