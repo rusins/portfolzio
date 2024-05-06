@@ -46,7 +46,7 @@ object Main extends ZIOAppDefault:
         _ <- ZIO.log(s"Data directory: ${ config.data.directory }")
         _ <- ZIO.log(s"Preview directory: ${ config.previews.directory }")
         appStateManager <- AppStateManager.make
-        httpApps = Website(config)(appStateManager).app ++ FileDownloading(config).app
+        httpApps = Website(config)(appStateManager).app ++ FileHttpApp(config).app
         webServer = Server
           .serve(httpApps.withDefaultErrorResponse)
           .provide(

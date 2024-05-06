@@ -1,7 +1,7 @@
 package portfolzio.website.html
 
 import portfolzio.website.html.CustomAttributes.propertyAttr
-import zio.http.html.*
+import zio.http.template.*
 object CustomTags {
 
   /** Open Graph metadata. https://ogp.me/ */

@@ -1,7 +1,7 @@
 package portfolzio.website.html
 
-import zio.http.html.Attributes.PartialAttribute
-import zio.http.html.{Dom, Html}
+import zio.http.template.Attributes.PartialAttribute
+import zio.http.template.{Dom, Html}
 
 object CustomAttributes {
 

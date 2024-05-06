@@ -4,7 +4,8 @@ import portfolzio.AppState
 import portfolzio.model.AlbumEntry
 import portfolzio.model.AlbumEntry.Image
 import portfolzio.website.html.CustomTags.OGTags
-import zio.http.html.*
+import zio.http.template.*
+import zio.http.template.IsAttributeValue.{instanceList, instanceString, instanceTuple2Seq}
 
 import java.time.format.DateTimeFormatter
 

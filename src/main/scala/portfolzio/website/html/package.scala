@@ -1,6 +1,6 @@
 package portfolzio.website
 
-import zio.http.html.Html
+import zio.http.template.*
 
 package object html {
 

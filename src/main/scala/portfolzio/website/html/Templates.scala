@@ -6,7 +6,7 @@ import portfolzio.model.AlbumEntry.*
 import portfolzio.util.Regex.DelimiterRegex
 import portfolzio.website.html.CustomAttributes.*
 import portfolzio.website.html.CustomTags.OGTags
-import zio.http.html.*
+import zio.http.template.*
 import zio.prelude.EqualOps
 
 class Templates(titleText: String, rootUrl: Option[String]):
@@ -143,7 +143,7 @@ class Templates(titleText: String, rootUrl: Option[String]):
 
   def albumView(state: AppState)(rootAlbum: Option[Album], entries: List[AlbumEntry]): Html =
     val MaxWidth = "120em"
-    val (albums, images) = entries.partitionAlbumEntries
+    val (albums: List[Album], images: List[Image]) = entries.partitionAlbumEntries
     div(
       centeredTopText(rootAlbum.map(_.name).getOrElse("")),
       div(

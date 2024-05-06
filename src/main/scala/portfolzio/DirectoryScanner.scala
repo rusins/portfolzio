@@ -1,7 +1,7 @@
 package portfolzio
 
 import org.apache.commons.imaging.common.ImageMetadata
-import org.apache.commons.imaging.{ImageReadException, Imaging}
+import org.apache.commons.imaging.{Imaging, ImagingException}
 import portfolzio.model.AlbumEntry.IdSelector
 import portfolzio.model.{AlbumEntry, ImageInfo}
 import portfolzio.util.ExifHelpers.*
@@ -110,7 +110,7 @@ object DirectoryScanner:
                   try
                     Right(Imaging.getMetadata(imageFiles.head))
                   catch
-                    case e: ImageReadException => Left(e.toString)
+                    case e: ImagingException => Left(e.toString)
                 }.flatMap {
                   case Left(error)     => ZIO.logWarning(s"Failed to read Exif metadata for $imageId - $error").as(None)
                   case Right(metadata) => ZIO.succeed(Some(metadata))

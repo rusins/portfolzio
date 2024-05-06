@@ -8,7 +8,8 @@ import portfolzio.website.html.{Pages, Templates}
 import portfolzio.{AppStateManager, WebsiteConfig}
 import zio.*
 import zio.http.*
-import zio.http.html.Html
+import zio.http.codec.PathCodec
+import zio.http.template.Html
 import zio.stream.ZStream
 
 import java.nio.charset.StandardCharsets
@@ -51,13 +52,8 @@ class Website(config: WebsiteConfig)(
     val concatenatedId = path.segments.drop(index).map(_.text).foldLeft("") { case (a, b) => s"$a/$b" }
     java.net.URLDecoder.decode(concatenatedId, StandardCharsets.UTF_8)
 
-  object `/id`:
-    def unapply(path: zio.http.Path): Option[(zio.http.Path, AlbumEntry.Id)] =
-      Option.when(path.segments.length > 2)(path.take(2) -> AlbumEntry.Id.safe(albumEntryIdFromPath(path, index = 2)))
-
-  val app: Http[Any, Throwable, Request, Response] =
-    Http.collectZIO[Request]:
-      case Method.GET -> Root =>
+  val app: HttpApp[Any] = Routes(
+    Method.GET / "" -> Handler.fromZIO(
         appStateManager.getState.map(state =>
           Response.html(
             pageWithNavigation(config.url.map(rootUrl =>
@@ -84,8 +80,9 @@ class Website(config: WebsiteConfig)(
             ))
           )
         )
+    ),
 
-      case Method.GET -> Root / "random" =>
+    Method.GET / "random" -> Handler.fromZIO(
         appStateManager.getState.map(state =>
           Response.html(
             pageWithNavigation()(
@@ -95,8 +92,9 @@ class Website(config: WebsiteConfig)(
             )
           )
         )
+    ),
 
-      case Method.GET -> Root / "recent" =>
+    Method.GET / "recent" -> Handler.fromZIO(
         appStateManager.getState.map(state =>
           Response.html(
             pageWithNavigation()(
@@ -106,8 +104,9 @@ class Website(config: WebsiteConfig)(
             )
           )
         )
+    ),
 
-      case Method.GET -> Root / "albums" =>
+    Method.GET / "albums" -> Handler.fromZIO(
         appStateManager.getState.map(state =>
           Response.html(
             pageWithNavigation()(
@@ -120,8 +119,9 @@ class Website(config: WebsiteConfig)(
             )
           )
         )
+    ),
 
-      case Method.GET -> Root / "tags" =>
+    Method.GET / "tags" -> Handler.fromZIO(
         appStateManager.getState.map(state =>
           Response.html(
             tagsPage(
@@ -129,15 +129,17 @@ class Website(config: WebsiteConfig)(
             )
           )
         )
+    ),
 
-      case Method.GET -> Root / "image" `/id` imageId =>
+    Method.GET / "image" / trailing(imageId) -> Handler.fromZIO(
         appStateManager.getState.map(state =>
           state.albumEntries.get(imageId) match
             case Some(image: Image) => Response.html(imagePage(image))
             case _                  => Response.html(notFoundPage(s"Image $imageId not found"), Status.NotFound)
         )
+    ),
 
-      case Method.GET -> Root / "album" `/id` albumId =>
+    Method.GET / "album" / trailing(albumId) -> Handler.fromZIO(
         appStateManager.getState.map(state =>
           val (status: Status, content: Html) = state.albumEntries.get(albumId) match
             case Some(album: Album) => state.children.get(album.id) match {
@@ -158,36 +160,15 @@ class Website(config: WebsiteConfig)(
 
           Response.html(content, status)
         )
+    ),
 
-      case Method.GET -> Root / "tag" / tag =>
+    Method.GET / "tag" / string(tag) -> Handler.fromZIO(
         appStateManager.getState.map(state =>
           Response.html(tagPage(state)(java.net.URLDecoder.decode(tag, StandardCharsets.UTF_8)))
         )
+    ),
 
-      case Method.GET -> Root / "css" / file =>
-        cssPath.safeResolve(Paths.get(file)).fold(
-          ZIO.succeed(Response(Status.Forbidden))
-        )(filePath =>
-          resourceResponse(filePath, MediaType.text.css)
-        )
-
-      case Method.GET -> Root / "js" / file =>
-        jsPath.safeResolve(Paths.get(file)).fold(
-          ZIO.succeed(Response(Status.Forbidden))
-        )(filePath =>
-          resourceResponse(filePath, MediaType.text.javascript)
-        )
-
-      case Method.GET -> Root / "img" / file =>
-        imgPath.safeResolve(Paths.get(file)).fold(
-          ZIO.succeed(Response(Status.Forbidden))
-        )(filePath =>
-          if (file.endsWith(".png")) resourceResponse(filePath, MediaType.image.png)
-          else if (file.endsWith(".jpg")) resourceResponse(filePath, MediaType.image.jpeg)
-          else resourceResponse(filePath, MediaType.any)
-        )
-
-      case Method.GET -> Root / "preview" `/id` imageId =>
+    Method.GET / "preview" / trailing(imageId) -> Handler.fromZIO(
         val p = previewPath.safeResolve(Paths.get(imageId.value.stripPrefix("/") + ".jpg"))
         p.fold(
           ZIO.succeed(Response(Status.Forbidden))
@@ -197,13 +178,5 @@ class Website(config: WebsiteConfig)(
           else
             resourceResponse(imgPath.resolve("image-not-found.jpg"), MediaType.image.jpeg)
         )
-
-      case Method.GET -> Root / "license" =>
-        config.licenseFile.fold(ZIO.succeed(Response(Status.NotFound)))(licenseFile =>
-          ZIO.readFile(licenseFile).map(licenseContents =>
-            Response.html(licensePage(licenseContents))
-          )
-        )
-
-      case Method.GET -> Root / "robots.txt" =>
-        resourceResponse(Paths.get("robots.txt"), MediaType.text.plain)
+  )
+  )
